@@ -2,7 +2,7 @@
 
 **Course:** [Course name and code]
 **Team:** [Student 1 name, ID] · [Student 2 name, ID]
-**Repository:** [GitHub repository URL]
+**Repository:** https://github.com/Suf-7/stackoverflow-lakehouse
 **Date:** 25 September 2026
 
 ---
