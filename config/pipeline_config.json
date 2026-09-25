@@ -1,0 +1,14 @@
+{
+  "site": "stackoverflow",
+  "history_start_date": "2018-01-01",
+  "tags": [
+    "pandas", "numpy", "apache-spark", "pyspark", "sql", "r",
+    "scikit-learn", "tensorflow", "pytorch", "matplotlib",
+    "airflow", "dbt", "databricks", "powerbi", "tableau-api",
+    "python-polars", "duckdb", "snowflake-cloud-data-platform"
+  ],
+  "page_size": 100,
+  "question_filter": "withbody",
+  "answer_filter": "withbody",
+  "min_quota_reserve": 20
+}

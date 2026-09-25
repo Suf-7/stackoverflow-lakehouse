@@ -1,0 +1,8 @@
+# Raw and full-size data never goes to GitHub. Only small samples live in data/samples/.
+data/raw/
+data/landing/
+*.parquet
+.env
+__pycache__/
+.DS_Store
+.ipynb_checkpoints/

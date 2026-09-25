@@ -1,0 +1,132 @@
+{
+  "generated_at_utc": "2026-09-25T15:55:29Z",
+  "history_start_date": "2018-01-01",
+  "tags_not_found": [],
+  "per_tag": {
+    "pandas": {
+      "all_time_questions": 288833,
+      "questions_since_start": 232101,
+      "questions_last_30_days": 7,
+      "questions_with_activity_last_30_days": 49
+    },
+    "numpy": {
+      "all_time_questions": 115118,
+      "questions_since_start": 72815,
+      "questions_last_30_days": 4,
+      "questions_with_activity_last_30_days": 27
+    },
+    "apache-spark": {
+      "all_time_questions": 82511,
+      "questions_since_start": 50157,
+      "questions_last_30_days": 2,
+      "questions_with_activity_last_30_days": 28
+    },
+    "pyspark": {
+      "all_time_questions": 40915,
+      "questions_since_start": 33793,
+      "questions_last_30_days": 2,
+      "questions_with_activity_last_30_days": 25
+    },
+    "sql": {
+      "all_time_questions": 673531,
+      "questions_since_start": 262432,
+      "questions_last_30_days": 18,
+      "questions_with_activity_last_30_days": 306
+    },
+    "r": {
+      "all_time_questions": 510361,
+      "questions_since_start": 301993,
+      "questions_last_30_days": 33,
+      "questions_with_activity_last_30_days": 124
+    },
+    "scikit-learn": {
+      "all_time_questions": 28173,
+      "questions_since_start": 18873,
+      "questions_last_30_days": 1,
+      "questions_with_activity_last_30_days": 7
+    },
+    "tensorflow": {
+      "all_time_questions": 82083,
+      "questions_since_start": 63559,
+      "questions_last_30_days": 2,
+      "questions_with_activity_last_30_days": 12
+    },
+    "pytorch": {
+      "all_time_questions": 23816,
+      "questions_since_start": 23399,
+      "questions_last_30_days": 0,
+      "questions_with_activity_last_30_days": 14
+    },
+    "matplotlib": {
+      "all_time_questions": 72718,
+      "questions_since_start": 45971,
+      "questions_last_30_days": 3,
+      "questions_with_activity_last_30_days": 24
+    },
+    "airflow": {
+      "all_time_questions": 10650,
+      "questions_since_start": 11210,
+      "questions_last_30_days": 2,
+      "questions_with_activity_last_30_days": 8
+    },
+    "dbt": {
+      "all_time_questions": 1568,
+      "questions_since_start": 1567,
+      "questions_last_30_days": 0,
+      "questions_with_activity_last_30_days": 1
+    },
+    "databricks": {
+      "all_time_questions": 8439,
+      "questions_since_start": 8265,
+      "questions_last_30_days": 1,
+      "questions_with_activity_last_30_days": 9
+    },
+    "powerbi": {
+      "all_time_questions": 20524,
+      "questions_since_start": 18780,
+      "questions_last_30_days": 5,
+      "questions_with_activity_last_30_days": 16
+    },
+    "tableau-api": {
+      "all_time_questions": 5352,
+      "questions_since_start": 3093,
+      "questions_last_30_days": 0,
+      "questions_with_activity_last_30_days": 4
+    },
+    "duckdb": {
+      "all_time_questions": 501,
+      "questions_since_start": 501,
+      "questions_last_30_days": 0,
+      "questions_with_activity_last_30_days": 0
+    },
+    "snowflake-cloud-data-platform": {
+      "all_time_questions": 12242,
+      "questions_since_start": 12719,
+      "questions_last_30_days": 2,
+      "questions_with_activity_last_30_days": 11
+    },
+    "python-polars": {
+      "all_time_questions": 2836,
+      "questions_since_start": 2836,
+      "questions_last_30_days": 0,
+      "questions_with_activity_last_30_days": 2
+    }
+  },
+  "sum_questions_since_start_before_dedup": 1164064,
+  "sum_questions_last_30_days_before_dedup": 82,
+  "sum_active_questions_last_30_days_before_dedup": 667,
+  "site_wide_questions_per_year": {
+    "2018": 1875801,
+    "2019": 1755709,
+    "2020": 1855032,
+    "2021": 1534281,
+    "2022": 1335301,
+    "2023": 787772,
+    "2024": 398430,
+    "2025": 109754,
+    "2026": 19539
+  },
+  "note": "2026 is year-to-date. Counts exclude deleted posts.",
+  "api_requests": 67,
+  "quota_remaining": null
+}

@@ -1,0 +1,256 @@
+{
+  "full_load": {
+    "questions": 2738,
+    "answers": 3384,
+    "answers_per_question": 1.236,
+    "avg_question_bytes": 3280,
+    "avg_answer_bytes": 2288,
+    "avg_tracked_tags_per_question": 1.087,
+    "pct_questions_answered": 66.0,
+    "pct_questions_closed": 9.7,
+    "pct_questions_with_accepted_answer": 45.0,
+    "owner_user_types": {
+      "registered": 6066,
+      "does_not_exist": 39,
+      "moderator": 14,
+      "unregistered": 3
+    },
+    "distinct_owner_user_ids": 3200,
+    "question_fields_presence": {
+      "accepted_answer_id": 0.45,
+      "answer_count": 1.0,
+      "body": 1.0,
+      "closed_date": 0.097,
+      "closed_reason": 0.097,
+      "content_license": 0.903,
+      "creation_date": 1.0,
+      "is_answered": 1.0,
+      "last_activity_date": 1.0,
+      "last_edit_date": 0.669,
+      "link": 1.0,
+      "migrated_from": 0.001,
+      "migrated_from.on_date": 0.001,
+      "migrated_from.other_site": 0.001,
+      "migrated_from.question_id": 0.001,
+      "owner": 1.0,
+      "owner.accept_rate": 0.211,
+      "owner.account_id": 0.995,
+      "owner.display_name": 1.0,
+      "owner.link": 0.995,
+      "owner.profile_image": 0.995,
+      "owner.reputation": 0.995,
+      "owner.user_id": 0.995,
+      "owner.user_type": 1.0,
+      "posted_by_collectives": 0.005,
+      "protected_date": 0.002,
+      "question_id": 1.0,
+      "score": 1.0,
+      "tags": 1.0,
+      "title": 1.0,
+      "view_count": 1.0
+    },
+    "answer_fields_presence": {
+      "answer_id": 1.0,
+      "body": 1.0,
+      "community_owned_date": 0.002,
+      "content_license": 1.0,
+      "creation_date": 1.0,
+      "is_accepted": 1.0,
+      "last_activity_date": 1.0,
+      "last_edit_date": 0.423,
+      "owner": 1.0,
+      "owner.accept_rate": 0.215,
+      "owner.account_id": 0.993,
+      "owner.display_name": 1.0,
+      "owner.link": 0.993,
+      "owner.profile_image": 0.993,
+      "owner.reputation": 0.993,
+      "owner.user_id": 0.993,
+      "owner.user_type": 1.0,
+      "posted_by_collectives": 0.07,
+      "question_id": 1.0,
+      "recommendations": 0.001,
+      "score": 1.0
+    },
+    "free_text_pii_scan_questions": {
+      "email": {
+        "matches": 47,
+        "posts_affected": 19,
+        "pct_posts": 0.69
+      },
+      "ipv4": {
+        "matches": 136,
+        "posts_affected": 29,
+        "pct_posts": 1.06
+      },
+      "credential_like": {
+        "matches": 31,
+        "posts_affected": 19,
+        "pct_posts": 0.69
+      },
+      "aws_access_key": {
+        "matches": 0,
+        "posts_affected": 0,
+        "pct_posts": 0.0
+      },
+      "jdbc_or_conn_string": {
+        "matches": 15,
+        "posts_affected": 12,
+        "pct_posts": 0.44
+      }
+    },
+    "free_text_pii_scan_answers": {
+      "email": {
+        "matches": 25,
+        "posts_affected": 15,
+        "pct_posts": 0.44
+      },
+      "ipv4": {
+        "matches": 106,
+        "posts_affected": 15,
+        "pct_posts": 0.44
+      },
+      "credential_like": {
+        "matches": 16,
+        "posts_affected": 10,
+        "pct_posts": 0.3
+      },
+      "aws_access_key": {
+        "matches": 0,
+        "posts_affected": 0,
+        "pct_posts": 0.0
+      },
+      "jdbc_or_conn_string": {
+        "matches": 4,
+        "posts_affected": 4,
+        "pct_posts": 0.12
+      }
+    }
+  },
+  "incremental": {
+    "questions": 35,
+    "answers": 59,
+    "answers_per_question": 1.686,
+    "avg_question_bytes": 2565,
+    "avg_answer_bytes": 1528,
+    "avg_tracked_tags_per_question": 1.029,
+    "pct_questions_answered": 68.6,
+    "pct_questions_closed": 5.7,
+    "pct_questions_with_accepted_answer": 34.3,
+    "owner_user_types": {
+      "registered": 89,
+      "moderator": 1,
+      "does_not_exist": 2,
+      "unregistered": 2
+    },
+    "distinct_owner_user_ids": 85,
+    "question_fields_presence": {
+      "accepted_answer_id": 0.343,
+      "answer_count": 1.0,
+      "body": 1.0,
+      "closed_date": 0.057,
+      "closed_reason": 0.057,
+      "content_license": 0.914,
+      "creation_date": 1.0,
+      "is_answered": 1.0,
+      "last_activity_date": 1.0,
+      "last_edit_date": 0.743,
+      "link": 1.0,
+      "migrated_from": 0.029,
+      "migrated_from.on_date": 0.029,
+      "migrated_from.other_site": 0.029,
+      "migrated_from.question_id": 0.029,
+      "owner": 1.0,
+      "owner.accept_rate": 0.4,
+      "owner.account_id": 1.0,
+      "owner.display_name": 1.0,
+      "owner.link": 1.0,
+      "owner.profile_image": 1.0,
+      "owner.reputation": 1.0,
+      "owner.user_id": 1.0,
+      "owner.user_type": 1.0,
+      "protected_date": 0.029,
+      "question_id": 1.0,
+      "score": 1.0,
+      "tags": 1.0,
+      "title": 1.0,
+      "view_count": 1.0
+    },
+    "answer_fields_presence": {
+      "answer_id": 1.0,
+      "body": 1.0,
+      "community_owned_date": 0.017,
+      "content_license": 1.0,
+      "creation_date": 1.0,
+      "is_accepted": 1.0,
+      "last_activity_date": 1.0,
+      "last_edit_date": 0.508,
+      "owner": 1.0,
+      "owner.accept_rate": 0.356,
+      "owner.account_id": 0.966,
+      "owner.display_name": 1.0,
+      "owner.link": 0.966,
+      "owner.profile_image": 0.966,
+      "owner.reputation": 0.966,
+      "owner.user_id": 0.966,
+      "owner.user_type": 1.0,
+      "question_id": 1.0,
+      "score": 1.0
+    },
+    "free_text_pii_scan_questions": {
+      "email": {
+        "matches": 5,
+        "posts_affected": 1,
+        "pct_posts": 2.86
+      },
+      "ipv4": {
+        "matches": 0,
+        "posts_affected": 0,
+        "pct_posts": 0.0
+      },
+      "credential_like": {
+        "matches": 1,
+        "posts_affected": 1,
+        "pct_posts": 2.86
+      },
+      "aws_access_key": {
+        "matches": 0,
+        "posts_affected": 0,
+        "pct_posts": 0.0
+      },
+      "jdbc_or_conn_string": {
+        "matches": 0,
+        "posts_affected": 0,
+        "pct_posts": 0.0
+      }
+    },
+    "free_text_pii_scan_answers": {
+      "email": {
+        "matches": 8,
+        "posts_affected": 1,
+        "pct_posts": 1.69
+      },
+      "ipv4": {
+        "matches": 1,
+        "posts_affected": 1,
+        "pct_posts": 1.69
+      },
+      "credential_like": {
+        "matches": 0,
+        "posts_affected": 0,
+        "pct_posts": 0.0
+      },
+      "aws_access_key": {
+        "matches": 0,
+        "posts_affected": 0,
+        "pct_posts": 0.0
+      },
+      "jdbc_or_conn_string": {
+        "matches": 0,
+        "posts_affected": 0,
+        "pct_posts": 0.0
+      }
+    }
+  },
+  "incremental_ids_already_in_full_sample": 0
+}
