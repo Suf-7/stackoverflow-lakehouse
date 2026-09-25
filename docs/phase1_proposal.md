@@ -1,7 +1,7 @@
 # Phase 1 Proposal: Stack Overflow Developer Q&A Lakehouse
 
-**Course:** [Course name and code]
-**Team:** [Student 1 name, ID] · [Student 2 name, ID]
+**Course:** Data Analysis and Visualization
+**Team:** Muhammad Sufyan (24L-2601) · Muaaz Fahad (24L-2563)
 **Repository:** https://github.com/Suf-7/stackoverflow-lakehouse
 **Date:** 25 September 2026
 
