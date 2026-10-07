@@ -6,3 +6,10 @@ data/landing/
 __pycache__/
 .DS_Store
 .ipynb_checkpoints/
+
+# local Spark/Delta state
+.local/
+spark-warehouse/
+metastore_db/
+derby.log
+.pytest_cache/

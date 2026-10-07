@@ -15,7 +15,7 @@ are harmless because Silver MERGEs on question_id / answer_id.
 
 Examples
   python ingestion/incremental_load.py --since 2026-09-24T00:00:00 --out data/samples/incremental
-  python ingestion/incremental_load.py --out data/landing/incremental/$(date +%F)   # uses watermark
+  python ingestion/incremental_load.py --landing-root data/landing   # uses watermark
   python ingestion/incremental_load.py --since ... --reconcile-from data/samples/full_load/questions.jsonl --out ...
 """
 import argparse
@@ -25,7 +25,7 @@ import sys
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from common import ROOT, load_config, to_epoch, utc_now_iso, write_batch  # noqa: E402
+from common import ROOT, batch_folder, load_config, to_epoch, utc_now_iso, write_batch  # noqa: E402
 from so_api import QuotaExhausted, StackExchangeClient  # noqa: E402
 
 STATE_FILE = os.path.join(ROOT, "data", "state", "watermark.json")
@@ -72,11 +72,15 @@ def main():
     cfg = load_config()
     ap = argparse.ArgumentParser()
     ap.add_argument("--since", help="UTC ISO timestamp; default = stored watermark minus overlap")
-    ap.add_argument("--out", required=True)
+    dest = ap.add_mutually_exclusive_group(required=True)
+    dest.add_argument("--out", help="explicit output folder")
+    dest.add_argument("--landing-root", help="write to <root>/incremental/incr_<UTC timestamp>/ (pipeline layout)")
     ap.add_argument("--tags", nargs="*", default=cfg["tags"])
     ap.add_argument("--reconcile-from", help="JSONL of previously loaded questions to check for deletions")
     ap.add_argument("--no-state", action="store_true", help="do not advance the watermark (for samples/tests)")
     args = ap.parse_args()
+    if args.landing_root:
+        args.out = batch_folder(args.landing_root, "incremental")
 
     if args.since:
         since = to_epoch(args.since)

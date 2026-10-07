@@ -8,14 +8,14 @@ Examples
   # Phase 1 sample (3 months)
   python ingestion/full_load.py --from 2025-04-01 --to 2025-07-01 --out data/samples/full_load
   # Real baseline (run on Databricks / with an API key)
-  python ingestion/full_load.py --from 2018-01-01 --to 2026-09-01 --out data/landing/full_load
+  python ingestion/full_load.py --from 2018-01-01 --to 2026-09-01 --landing-root /Volumes/workspace/so_raw/landing
 """
 import argparse
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from common import load_config, month_windows, write_batch  # noqa: E402
+from common import batch_folder, load_config, month_windows, write_batch  # noqa: E402
 from so_api import QuotaExhausted, StackExchangeClient  # noqa: E402
 
 
@@ -24,10 +24,14 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--from", dest="start", default=cfg["history_start_date"])
     ap.add_argument("--to", dest="end", required=True)
-    ap.add_argument("--out", required=True)
+    dest = ap.add_mutually_exclusive_group(required=True)
+    dest.add_argument("--out", help="explicit output folder")
+    dest.add_argument("--landing-root", help="write to <root>/full/full_<from>_<to>/ (pipeline layout)")
     ap.add_argument("--tags", nargs="*", default=cfg["tags"])
     ap.add_argument("--no-answers", action="store_true")
     args = ap.parse_args()
+    if args.landing_root:
+        args.out = batch_folder(args.landing_root, "full", args.start, args.end)
 
     client = StackExchangeClient(cfg["site"], cfg["min_quota_reserve"])
     questions = {}

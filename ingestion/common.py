@@ -36,6 +36,22 @@ def month_windows(start, end):
         cur = stop
 
 
+def batch_folder(landing_root, load_type, start=None, end=None):
+    """Standard landing layout used by the Spark pipeline:
+
+        <landing_root>/full/full_<from>_<to>/
+        <landing_root>/incremental/incr_<UTC timestamp>/
+
+    The folder name doubles as the batch id in Bronze, so it must be unique
+    and deterministic for a given extraction.
+    """
+    if load_type == "full":
+        name = f"full_{start}_{end}"
+    else:
+        name = "incr_" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    return os.path.join(landing_root, load_type, name)
+
+
 def write_batch(out_dir, datasets, manifest):
     """Land one batch in Bronze format: raw API items as JSON Lines + a manifest.
 
