@@ -1,0 +1,5 @@
+# Local development and tests only. Databricks already provides Spark and Delta.
+# Also needs Java 17 (Spark 3.5 does not run on Java 23+).
+pyspark==3.5.3
+delta-spark==3.2.1
+pytest>=8

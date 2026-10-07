@@ -2,13 +2,38 @@
   "site": "stackoverflow",
   "history_start_date": "2018-01-01",
   "tags": [
-    "pandas", "numpy", "apache-spark", "pyspark", "sql", "r",
-    "scikit-learn", "tensorflow", "pytorch", "matplotlib",
-    "airflow", "dbt", "databricks", "powerbi", "tableau-api",
-    "python-polars", "duckdb", "snowflake-cloud-data-platform"
+    "pandas",
+    "numpy",
+    "apache-spark",
+    "pyspark",
+    "sql",
+    "r",
+    "scikit-learn",
+    "tensorflow",
+    "pytorch",
+    "matplotlib",
+    "airflow",
+    "dbt",
+    "databricks",
+    "powerbi",
+    "tableau-api",
+    "python-polars",
+    "duckdb",
+    "snowflake-cloud-data-platform"
   ],
   "page_size": 100,
   "question_filter": "withbody",
   "answer_filter": "withbody",
-  "min_quota_reserve": 20
+  "min_quota_reserve": 20,
+  "lakehouse": {
+    "catalog": "workspace",
+    "raw_schema": "so_raw",
+    "landing_volume": "landing",
+    "bronze_schema": "so_bronze",
+    "silver_schema": "so_silver",
+    "ops_schema": "so_ops",
+    "drift_mode": "evolve",
+    "pii_salt_secret_scope": "so_lakehouse",
+    "pii_salt_secret_key": "pii_salt"
+  }
 }
