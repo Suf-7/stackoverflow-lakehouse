@@ -1,0 +1,56 @@
+{
+  "name": "so_lakehouse_bronze_silver",
+  "description": "Raw-to-Bronze then Bronze-to-Silver. Defaults run a standard incremental load; override the job parameters to backfill.",
+  "parameters": [
+    {"name": "catalog", "default": "workspace"},
+    {"name": "mode", "default": "incremental"},
+    {"name": "load_type", "default": "all"},
+    {"name": "batch_ids", "default": ""},
+    {"name": "start_date", "default": ""},
+    {"name": "end_date", "default": ""},
+    {"name": "landing_path", "default": ""},
+    {"name": "drift_mode", "default": "evolve"}
+  ],
+  "tasks": [
+    {
+      "task_key": "raw_to_bronze",
+      "notebook_task": {
+        "notebook_path": "/Workspace/Users/<your-email>/stackoverflow-lakehouse/notebooks/01_raw_to_bronze",
+        "base_parameters": {
+          "catalog": "{{job.parameters.catalog}}",
+          "mode": "{{job.parameters.mode}}",
+          "load_type": "{{job.parameters.load_type}}",
+          "batch_ids": "{{job.parameters.batch_ids}}",
+          "start_date": "{{job.parameters.start_date}}",
+          "end_date": "{{job.parameters.end_date}}",
+          "landing_path": "{{job.parameters.landing_path}}",
+          "drift_mode": "{{job.parameters.drift_mode}}"
+        }
+      },
+      "max_retries": 1,
+      "min_retry_interval_millis": 60000
+    },
+    {
+      "task_key": "bronze_to_silver",
+      "depends_on": [{"task_key": "raw_to_bronze"}],
+      "notebook_task": {
+        "notebook_path": "/Workspace/Users/<your-email>/stackoverflow-lakehouse/notebooks/02_bronze_to_silver",
+        "base_parameters": {
+          "catalog": "{{job.parameters.catalog}}",
+          "mode": "{{job.parameters.mode}}",
+          "batch_ids": "{{job.parameters.batch_ids}}",
+          "start_date": "{{job.parameters.start_date}}",
+          "end_date": "{{job.parameters.end_date}}"
+        }
+      },
+      "max_retries": 1,
+      "min_retry_interval_millis": 60000
+    }
+  ],
+  "schedule": {
+    "quartz_cron_expression": "0 0 6 * * ?",
+    "timezone_id": "UTC",
+    "pause_status": "PAUSED"
+  },
+  "max_concurrent_runs": 1
+}
