@@ -1,0 +1,51 @@
+{
+  "load_type": "incremental",
+  "site": "stackoverflow",
+  "since_epoch": 1790265503,
+  "tags": [
+    "pandas",
+    "numpy",
+    "apache-spark",
+    "pyspark",
+    "sql",
+    "r",
+    "scikit-learn",
+    "tensorflow",
+    "pytorch",
+    "matplotlib",
+    "airflow",
+    "dbt",
+    "databricks",
+    "powerbi",
+    "tableau-api",
+    "python-polars",
+    "duckdb",
+    "snowflake-cloud-data-platform"
+  ],
+  "questions_new": 2,
+  "questions_updated": 33,
+  "next_watermark_epoch": 1790351774,
+  "api_requests": 47,
+  "quota_remaining": 67,
+  "batch_id": "5cb41ac6-d507-405c-9236-6578216737ea",
+  "extracted_at_utc": "2026-09-25T15:58:59Z",
+  "files": {
+    "questions.jsonl": {
+      "records": 35,
+      "bytes": 89698
+    },
+    "answers.jsonl": {
+      "records": 59,
+      "bytes": 89983
+    },
+    "deleted_questions.jsonl": {
+      "records": 0,
+      "bytes": 0
+    },
+    "question_snapshots.jsonl": {
+      "records": 100,
+      "bytes": 14594
+    }
+  },
+  "reconciliation_note": "deleted_questions.jsonl: all 2,738 full-load sample ids were re-checked minutes after the full load; 0 deletions found, as expected so soon. question_snapshots.jsonl: fresh metrics for the first 100 full-load ids only, captured separately to stay inside the 300-request daily quota of an unkeyed client."
+}

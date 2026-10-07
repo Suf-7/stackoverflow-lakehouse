@@ -1,0 +1,60 @@
+{
+  "load_type": "full",
+  "site": "stackoverflow",
+  "window_start": "2025-04-01",
+  "window_end_exclusive": "2025-07-01",
+  "tags": [
+    "pandas",
+    "numpy",
+    "apache-spark",
+    "pyspark",
+    "sql",
+    "r",
+    "scikit-learn",
+    "tensorflow",
+    "pytorch",
+    "matplotlib",
+    "airflow",
+    "dbt",
+    "databricks",
+    "powerbi",
+    "tableau-api",
+    "python-polars",
+    "duckdb",
+    "snowflake-cloud-data-platform"
+  ],
+  "new_ids_per_tag_in_order": {
+    "pandas": 285,
+    "numpy": 131,
+    "apache-spark": 137,
+    "pyspark": 63,
+    "sql": 531,
+    "r": 881,
+    "scikit-learn": 17,
+    "tensorflow": 90,
+    "pytorch": 103,
+    "matplotlib": 102,
+    "airflow": 33,
+    "dbt": 19,
+    "databricks": 35,
+    "powerbi": 157,
+    "tableau-api": 7,
+    "python-polars": 82,
+    "duckdb": 12,
+    "snowflake-cloud-data-platform": 53
+  },
+  "api_requests": 113,
+  "quota_remaining": 115,
+  "batch_id": "8657a421-7f3a-4491-bddd-0a9f2fc717a0",
+  "extracted_at_utc": "2026-09-25T15:58:12Z",
+  "files": {
+    "questions.jsonl": {
+      "records": 2738,
+      "bytes": 8935302
+    },
+    "answers.jsonl": {
+      "records": 3384,
+      "bytes": 7699079
+    }
+  }
+}

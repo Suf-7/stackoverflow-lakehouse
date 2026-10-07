@@ -1,0 +1,50 @@
+{
+  "load_type": "incremental",
+  "site": "stackoverflow",
+  "since_epoch": 1791244800,
+  "tags": [
+    "pandas",
+    "numpy",
+    "apache-spark",
+    "pyspark",
+    "sql",
+    "r",
+    "scikit-learn",
+    "tensorflow",
+    "pytorch",
+    "matplotlib",
+    "airflow",
+    "dbt",
+    "databricks",
+    "powerbi",
+    "tableau-api",
+    "python-polars",
+    "duckdb",
+    "snowflake-cloud-data-platform"
+  ],
+  "questions_new": 4,
+  "questions_updated": 47,
+  "next_watermark_epoch": 1791385729,
+  "api_requests": 19,
+  "quota_remaining": 27,
+  "batch_id": "47a8a987-4aec-43e5-affd-afa2ead49bce",
+  "extracted_at_utc": "2026-10-07T16:00:43Z",
+  "files": {
+    "questions.jsonl": {
+      "records": 51,
+      "bytes": 117209
+    },
+    "answers.jsonl": {
+      "records": 84,
+      "bytes": 122900
+    },
+    "deleted_questions.jsonl": {
+      "records": 0,
+      "bytes": 0
+    },
+    "question_snapshots.jsonl": {
+      "records": 0,
+      "bytes": 0
+    }
+  }
+}
