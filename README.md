@@ -5,7 +5,7 @@ An end-to-end Medallion lakehouse on Databricks that tracks Stack Overflow quest
 | Phase | Deliverable |
 |---|---|
 | 1 | [Proposal](docs/phase1_proposal.md) ([PDF](docs/phase1_proposal.pdf)) |
-| 2 | This README, the [`src/so_lakehouse`](src/so_lakehouse) package, the [notebooks](notebooks), the [data dictionary](docs/data_dictionary.md) and the [Phase 2 learning guide](docs/phase2_guide.md) ([PDF](docs/phase2_guide.pdf)) |
+| 2 | This README, the [`src/so_lakehouse`](src/so_lakehouse) package, the [notebooks](notebooks), the [data dictionary](docs/data_dictionary.md), the [Databricks run results](docs/databricks_run/README.md) and the [Phase 2 learning guide](docs/phase2_guide.md) ([PDF](docs/phase2_guide.pdf)) |
 
 **Team:** Muhammad Sufyan (24L-2601), Muaaz Fahad (24L-2563). **Source:** [Stack Exchange API v2.3](https://api.stackexchange.com/docs), content licensed CC BY-SA 4.0.
 
@@ -134,7 +134,7 @@ In the Databricks job, the same choices are made by overriding job parameters wi
 | Schema drift | New columns: `mergeSchema` evolution or `_rescued_data`. Type changes, malformed lines and missing keys go to quarantine. Logged in `so_ops.schema_drift_events` |
 | Audit logging | `so_ops.pipeline_execution_logs`: layer, parameter, start and end times, status, rows read, inserted, updated, deleted and quarantined |
 
-The [Phase 2 learning guide](docs/phase2_guide.md) explains each mechanism and shows the results of a real run.
+The pipeline was run end to end on Databricks Free Edition on 10 October 2026: nine notebook tasks, all SUCCESS. The [results and exported notebook outputs](docs/databricks_run/README.md) show the logs, the zero-change backfill, the drift handling and the duplicate checks. The [Phase 2 learning guide](docs/phase2_guide.md) explains each mechanism.
 
 ---
 

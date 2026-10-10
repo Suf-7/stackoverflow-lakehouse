@@ -432,6 +432,21 @@ Primary-key columns are `NOT NULL` in the DDL. On Unity Catalog, `00_setup` also
 
 The same scenario is automated in `tests/test_pipeline.py`. All 14 tests pass on Spark 3.5.3 with Delta Lake 3.2.1.
 
+### The same run on Databricks
+
+On 10 October 2026 the pipeline ran on our Databricks Free Edition workspace as one job of nine notebook tasks on serverless compute. All nine succeeded, and the numbers match the local run:
+
+| What we checked on Databricks | Result |
+|---|---|
+| Initial Raw-to-Bronze | 16 files, 24,764 records, 0 quarantined |
+| Initial Bronze-to-Silver | 7,618 questions, 9,611 answers, 24,177 tag pairs, 8,332 users |
+| Re-run in incremental mode | Every step SKIPPED |
+| Schema-drift batch | 2 loaded, 3 quarantined, `ai_assisted` added through mergeSchema |
+| Full Silver backfill | 90,750 rows read, **0 inserted, 0 updated** |
+| Duplicate primary keys | 0 in every Silver table |
+
+Details and the exported notebook outputs are in `docs/databricks_run/`.
+
 ---
 
 ## 14. Running it yourself
