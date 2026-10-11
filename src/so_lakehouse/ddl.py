@@ -32,11 +32,32 @@ def setup(spark, cfg, reset=False, log=print):
             log(f"dropped {full}")
         existed = table_exists(spark, full)
         spark.sql(create_table_sql(full, schema, pk, description, layer))
-        if cfg.catalog and not existed:
-            # Informational primary keys are a Unity Catalog feature.
-            cname = f"pk_{logical.replace('.', '_')}"
-            try:
-                spark.sql(f"ALTER TABLE {full} ADD CONSTRAINT {cname} PRIMARY KEY ({', '.join(pk)})")
-            except Exception as exc:  # not fatal: NOT NULL is already enforced
-                log(f"note: primary key constraint skipped on {full}: {str(exc)[:120]}")
+        if not existed:
+            ensure_primary_key(spark, cfg, logical, log=log)
         log(f"{'exists ' if existed else 'created'} {full}")
+
+
+def ensure_primary_key(spark, cfg, logical, log=print):
+    """Declare the informational PRIMARY KEY (a Unity Catalog feature) if the table lacks it.
+
+    Called at setup and again after any write that evolves a table's schema,
+    because a mergeSchema write can drop Unity Catalog constraints.
+    Returns True when a constraint was added.
+    """
+    if not cfg.catalog:
+        return False
+    _layer, name, _schema, pk, _d = TABLES[logical]
+    schema_part = cfg.schema_name(_layer).split(".")[-1]
+    present = spark.sql(
+        f"SELECT 1 FROM {cfg.catalog}.information_schema.table_constraints "
+        f"WHERE table_schema = '{schema_part}' AND table_name = '{name}' AND constraint_type = 'PRIMARY KEY'"
+    ).count()
+    if present:
+        return False
+    try:
+        spark.sql(f"ALTER TABLE {cfg.table(logical)} ADD CONSTRAINT pk_{logical.replace('.', '_')} "
+                  f"PRIMARY KEY ({', '.join(pk)})")
+        return True
+    except Exception as exc:  # not fatal: NOT NULL is already enforced on the key columns
+        log(f"note: primary key constraint skipped on {cfg.table(logical)}: {str(exc)[:120]}")
+        return False

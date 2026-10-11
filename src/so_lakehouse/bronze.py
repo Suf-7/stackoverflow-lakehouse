@@ -23,6 +23,7 @@ from pyspark.sql.types import StringType, StructField, StructType
 
 from .audit import AuditLogger, utc_now
 from .batches import discover_batches, parse_list, read_batch, select_batches
+from .ddl import ensure_primary_key
 from .delta_utils import merge_sql, run_merge
 from .drift import make_contract_check, sanitize_column
 from .schemas import BATCH_REGISTRY, BRONZE_METADATA, DRIFT_EVENTS, RAW_CONTRACTS
@@ -190,6 +191,7 @@ def load_entity_file(spark, cfg, batch, entity, path, rec, run_id):
     if new_cols:
         writer = writer.option("mergeSchema", "true")   # schema evolution for drift
     writer.saveAsTable(target)
+    pk_restored = ensure_primary_key(spark, cfg, f"bronze.{entity}") if new_cols else False
 
     # 5. invalid records -> quarantine (replaced per batch+entity, so reruns stay idempotent)
     bad = (parsed.where(F.col("_reason").isNotNull())
@@ -218,7 +220,8 @@ def load_entity_file(spark, cfg, batch, entity, path, rec, run_id):
     if replaced:
         notes.append(f"replaced {replaced} rows from a previous load of this batch")
     if new_cols:
-        notes.append(f"schema evolved: added {', '.join(new_cols)}")
+        notes.append(f"schema evolved: added {', '.join(new_cols)}"
+                     + ("; primary key constraint re-applied" if pk_restored else ""))
     rescued = [d[1] for d in drift_rows if d[0] == "new_column" and d[4] == "rescued"]
     if rescued:
         notes.append(f"rescued unknown fields: {', '.join(rescued[:5])}")
