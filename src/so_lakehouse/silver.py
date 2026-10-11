@@ -209,15 +209,12 @@ def answer_dq_rules():
 
 
 # ============================================================================ steps
-def step_questions(spark, cfg, ids, rec):
-    raw = bronze(spark, cfg, "questions", ids)
-    rec.rows_read = raw.count()
-    latest = latest_per_key(raw, ["question_id"], [F.col("_extracted_at").desc(), F.col("last_activity_date").desc(),
-                                                   F.col("_record_hash")])
-    valid, failed = split_dq(transform_questions(latest, cfg), question_dq_rules())
-    rec.rows_quarantined = quarantine_dq(spark, cfg, failed, "questions", "question_id")
-    valid.createOrReplaceTempView("src_questions")
+def questions_merge_sql(cfg, source_view="src_questions"):
+    """The exact MERGE INTO statement used to upsert silver.questions.
 
+    Update only when the source row is NEWER and DIFFERENT; insert unknown keys.
+    Exposed as a function so the audit notebook can print the real statement.
+    """
     metrics = ["score", "view_count", "answer_count", "is_answered_api", "has_any_answer"]
     keep = {"question_id", "first_loaded_at", "is_deleted", "deleted_detected_at", "metrics_as_of"} | set(metrics)
     cols = [f.name for f in SILVER_QUESTIONS.fields]
@@ -228,9 +225,19 @@ def step_questions(spark, cfg, ids, rec):
     undelete = "t.is_deleted AND s.source_extracted_at > t.deleted_detected_at"
     upd["is_deleted"] = f"CASE WHEN {undelete} THEN false ELSE t.is_deleted END"
     upd["deleted_detected_at"] = f"CASE WHEN {undelete} THEN NULL ELSE t.deleted_detected_at END"
-    m = run_merge(spark, cfg.table("silver.questions"), merge_sql(
-        cfg.table("silver.questions"), "src_questions", ["question_id"], cols, upd,
-        matched_condition="s.source_extracted_at > t.source_extracted_at AND s.record_hash <> t.record_hash"))
+    return merge_sql(cfg.table("silver.questions"), source_view, ["question_id"], cols, upd,
+                     matched_condition="s.source_extracted_at > t.source_extracted_at AND s.record_hash <> t.record_hash")
+
+
+def step_questions(spark, cfg, ids, rec):
+    raw = bronze(spark, cfg, "questions", ids)
+    rec.rows_read = raw.count()
+    latest = latest_per_key(raw, ["question_id"], [F.col("_extracted_at").desc(), F.col("last_activity_date").desc(),
+                                                   F.col("_record_hash")])
+    valid, failed = split_dq(transform_questions(latest, cfg), question_dq_rules())
+    rec.rows_quarantined = quarantine_dq(spark, cfg, failed, "questions", "question_id")
+    valid.createOrReplaceTempView("src_questions")
+    m = run_merge(spark, cfg.table("silver.questions"), questions_merge_sql(cfg))
     rec.rows_inserted, rec.rows_updated = m["inserted"], m["updated"]
     rec.message = f"{latest.count()} unique questions after de-duplication"
 
