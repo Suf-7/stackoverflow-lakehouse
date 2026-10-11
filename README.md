@@ -5,7 +5,7 @@ An end-to-end Medallion lakehouse on Databricks that tracks Stack Overflow quest
 | Phase | Deliverable |
 |---|---|
 | 1 | [Proposal](docs/phase1_proposal.md) ([PDF](docs/phase1_proposal.pdf)) |
-| 2 | This README, the [`src/so_lakehouse`](src/so_lakehouse) package, the [notebooks](notebooks), the [data dictionary](docs/data_dictionary.md), the [Databricks run results](docs/databricks_run/README.md) and the [Phase 2 learning guide](docs/phase2_guide.md) ([PDF](docs/phase2_guide.pdf)) |
+| 2 | This README, the [`src/so_lakehouse`](src/so_lakehouse) package, the [notebooks](notebooks), the [data dictionary](docs/data_dictionary.md), the [Databricks run evidence](evidence/README.md) and the [Phase 2 learning guide](docs/phase2_guide.md) ([PDF](docs/phase2_guide.pdf)) |
 
 **Team:** Muhammad Sufyan (24L-2601), Muaaz Fahad (24L-2563). **Source:** [Stack Exchange API v2.3](https://api.stackexchange.com/docs), content licensed CC BY-SA 4.0.
 
@@ -46,6 +46,8 @@ flowchart LR
 | `ingestion/` | API extraction scripts that write landing batches |
 | `data/demo_landing/` | Five real batches (2 full, 3 incremental) used for the demo and tests |
 | `tests/test_pipeline.py` | End-to-end tests of every Phase 2 requirement on local Spark + Delta |
+| `evidence/` | Notebooks of a full Databricks run saved with their outputs, the proof for grading |
+| `scripts/export_databricks_run.py` | Saves any Databricks job run as Jupyter notebooks with outputs |
 
 ---
 
@@ -134,7 +136,7 @@ In the Databricks job, the same choices are made by overriding job parameters wi
 | Schema drift | New columns: `mergeSchema` evolution or `_rescued_data`. Type changes, malformed lines and missing keys go to quarantine. Logged in `so_ops.schema_drift_events` |
 | Audit logging | `so_ops.pipeline_execution_logs`: layer, parameter, start and end times, status, rows read, inserted, updated, deleted and quarantined |
 
-The pipeline was run end to end on Databricks Free Edition on 10 October 2026: nine notebook tasks, all SUCCESS. The [results and exported notebook outputs](docs/databricks_run/README.md) show the logs, the zero-change backfill, the drift handling and the duplicate checks. The [Phase 2 learning guide](docs/phase2_guide.md) explains each mechanism.
+**Proof that it works:** the [`evidence/`](evidence/README.md) folder holds the notebooks of a full run on Databricks Free Edition, saved with their outputs as Jupyter notebooks that GitHub displays directly. They show the explicit schemas, the table descriptions, the MERGE statement, a re-run that changes nothing, a backfill, the schema-drift handling and the log table. The [Phase 2 learning guide](docs/phase2_guide.md) explains each mechanism.
 
 ---
 

@@ -445,7 +445,7 @@ On 10 October 2026 the pipeline ran on our Databricks Free Edition workspace as 
 | Full Silver backfill | 90,750 rows read, **0 inserted, 0 updated** |
 | Duplicate primary keys | 0 in every Silver table |
 
-Details and the exported notebook outputs are in `docs/databricks_run/`.
+The notebooks of that run, saved with their outputs, are in the repo's `evidence/` folder; `evidence/README.md` maps each rubric item to the notebook and section that proves it.
 
 ---
 

@@ -1,0 +1,117 @@
+{
+  "run_id": 814281740296490,
+  "run_name": "so_lakehouse_phase2_evidence",
+  "result": "SUCCESS",
+  "tasks": [
+    {
+      "task_key": "t00_setup_reset",
+      "notebook": "00_setup",
+      "parameters": {
+        "catalog": "workspace",
+        "reset": "true",
+        "seed_demo_landing": "false"
+      },
+      "result": "SUCCESS",
+      "started": "2026-10-11 12:54 UTC"
+    },
+    {
+      "task_key": "t01_raw_to_bronze_initial",
+      "notebook": "01_raw_to_bronze",
+      "parameters": {
+        "catalog": "workspace",
+        "drift_mode": "evolve",
+        "load_type": "all",
+        "mode": "incremental"
+      },
+      "result": "SUCCESS",
+      "started": "2026-10-11 12:56 UTC"
+    },
+    {
+      "task_key": "t02_bronze_to_silver_initial",
+      "notebook": "02_bronze_to_silver",
+      "parameters": {
+        "catalog": "workspace",
+        "mode": "incremental"
+      },
+      "result": "SUCCESS",
+      "started": "2026-10-11 12:59 UTC"
+    },
+    {
+      "task_key": "t03_rerun_raw_to_bronze",
+      "notebook": "01_raw_to_bronze",
+      "parameters": {
+        "catalog": "workspace",
+        "drift_mode": "evolve",
+        "load_type": "all",
+        "mode": "incremental"
+      },
+      "result": "SUCCESS",
+      "started": "2026-10-11 13:01 UTC"
+    },
+    {
+      "task_key": "t04_rerun_bronze_to_silver",
+      "notebook": "02_bronze_to_silver",
+      "parameters": {
+        "catalog": "workspace",
+        "mode": "incremental"
+      },
+      "result": "SUCCESS",
+      "started": "2026-10-11 13:02 UTC"
+    },
+    {
+      "task_key": "t05_schema_drift_demo",
+      "notebook": "04_schema_drift_demo",
+      "parameters": {
+        "catalog": "workspace",
+        "drift_mode": "evolve"
+      },
+      "result": "SUCCESS",
+      "started": "2026-10-11 13:02 UTC"
+    },
+    {
+      "task_key": "t06_bronze_to_silver_after_drift",
+      "notebook": "02_bronze_to_silver",
+      "parameters": {
+        "catalog": "workspace",
+        "mode": "incremental"
+      },
+      "result": "SUCCESS",
+      "started": "2026-10-11 13:03 UTC"
+    },
+    {
+      "task_key": "t07_backfill_raw_to_bronze",
+      "notebook": "01_raw_to_bronze",
+      "parameters": {
+        "catalog": "workspace",
+        "drift_mode": "evolve",
+        "end_date": "2026-10-08",
+        "load_type": "all",
+        "mode": "backfill",
+        "start_date": "2026-09-25"
+      },
+      "result": "SUCCESS",
+      "started": "2026-10-11 13:05 UTC"
+    },
+    {
+      "task_key": "t08_backfill_bronze_to_silver",
+      "notebook": "02_bronze_to_silver",
+      "parameters": {
+        "catalog": "workspace",
+        "end_date": "2026-10-08",
+        "mode": "backfill",
+        "start_date": "2026-09-25"
+      },
+      "result": "SUCCESS",
+      "started": "2026-10-11 13:09 UTC"
+    },
+    {
+      "task_key": "t09_audit_and_validation",
+      "notebook": "03_audit_and_validation",
+      "parameters": {
+        "catalog": "workspace"
+      },
+      "result": "SUCCESS",
+      "started": "2026-10-11 13:11 UTC"
+    }
+  ]
+}
