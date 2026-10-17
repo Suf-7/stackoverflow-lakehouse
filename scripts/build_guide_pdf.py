@@ -4,6 +4,7 @@ Supports the Markdown used in the guide: headings, paragraphs, **bold**, `code`,
 [links](url), bullet and numbered lists, tables, fenced code blocks and rules.
 
     pip install reportlab && python scripts/build_guide_pdf.py
+    python scripts/build_guide_pdf.py docs/evaluation_prep.md docs/evaluation_prep.pdf "Phase 2 Evaluation Prep"
 """
 import os
 import re
@@ -65,7 +66,7 @@ def table(rows, width):
     data = [[Paragraph(inline(c), S["cellb" if i == 0 else "cell"]) for c in r + [""] * (ncol - len(r))]
             for i, r in enumerate(rows)]
     lens = [max(len(r[j]) if j < len(r) else 0 for r in rows) for j in range(ncol)]
-    weights = [min(max(l, 6), 60) for l in lens]
+    weights = [min(max(l, 10), 60) for l in lens]
     total = sum(weights)
     t = Table(data, colWidths=[width * w / total for w in weights], repeatRows=1, hAlign="LEFT")
     t.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"), ("BACKGROUND", (0, 0), (-1, 0), HEAD),
@@ -135,22 +136,23 @@ def parse(md, width):
     return story
 
 
-def on_page(canv, doc):
-    canv.saveState()
-    canv.setFont("Helvetica", 7.2)
-    canv.setFillColor(MUTED)
-    canv.drawString(18 * mm, 10 * mm, "Stack Overflow Developer Q&A Lakehouse  |  Phase 2 Learning Guide")
-    canv.drawRightString(A4[0] - 18 * mm, 10 * mm, f"Page {doc.page}")
-    canv.restoreState()
+def footer(label):
+    def on_page(canv, doc):
+        canv.saveState()
+        canv.setFont("Helvetica", 7.2)
+        canv.setFillColor(MUTED)
+        canv.drawString(18 * mm, 10 * mm, f"Stack Overflow Developer Q&A Lakehouse  |  {label}")
+        canv.drawRightString(A4[0] - 18 * mm, 10 * mm, f"Page {doc.page}")
+        canv.restoreState()
+    return on_page
 
 
-def main(src=SRC, out=OUT):
+def main(src=SRC, out=OUT, label="Phase 2 Learning Guide"):
     doc = BaseDocTemplate(out, pagesize=A4, leftMargin=18 * mm, rightMargin=18 * mm, topMargin=16 * mm,
-                          bottomMargin=17 * mm, title="Phase 2 Learning Guide: Bronze and Silver Layers",
-                          author="Muhammad Sufyan, Muaaz Fahad")
+                          bottomMargin=17 * mm, title=label, author="Muhammad Sufyan, Muaaz Fahad")
     frame = Frame(doc.leftMargin, doc.bottomMargin, doc.width, doc.height, leftPadding=0, rightPadding=0,
                   topPadding=0, bottomPadding=0)
-    doc.addPageTemplates([PageTemplate(id="p", frames=[frame], onPage=on_page)])
+    doc.addPageTemplates([PageTemplate(id="p", frames=[frame], onPage=footer(label))])
     with open(src) as f:
         doc.build(parse(f.read(), doc.width))
     print("wrote", out)
