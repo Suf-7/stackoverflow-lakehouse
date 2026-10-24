@@ -439,6 +439,19 @@ AGG_USER_COHORT = StructType([
     col("load_timestamp", TimestampType(), "When this row was last inserted or updated in Gold"),
 ])
 
+# Gold relationships declared in Unity Catalog: (child table, child column, parent table, parent column).
+# A foreign key must point at a primary key, so monthly tables join dim_date in the BI model instead.
+GOLD_FOREIGN_KEYS = [
+    ("gold.fact_question", "created_date_key", "gold.dim_date", "date_key"),
+    ("gold.fact_question", "owner_user_key", "gold.dim_user", "user_key"),
+    ("gold.fact_answer", "question_id", "gold.fact_question", "question_id"),
+    ("gold.fact_answer", "created_date_key", "gold.dim_date", "date_key"),
+    ("gold.fact_answer", "owner_user_key", "gold.dim_user", "user_key"),
+    ("gold.bridge_question_tag", "question_id", "gold.fact_question", "question_id"),
+    ("gold.bridge_question_tag", "tag", "gold.dim_tag", "tag"),
+    ("gold.agg_tag_month", "tag", "gold.dim_tag", "tag"),
+]
+
 # =============================================================================
 # 6. Registry: logical name -> (layer, table, schema, primary key, description)
 # =============================================================================

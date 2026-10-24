@@ -1,6 +1,6 @@
 """Create schemas, the landing volume and every Delta table from schemas.TABLES."""
 from .delta_utils import table_exists
-from .schemas import TABLES
+from .schemas import GOLD_FOREIGN_KEYS, TABLES
 
 
 def _escape(text):
@@ -35,6 +35,37 @@ def setup(spark, cfg, reset=False, log=print):
         if not existed:
             ensure_primary_key(spark, cfg, logical, log=log)
         log(f"{'exists ' if existed else 'created'} {full}")
+    ensure_foreign_keys(spark, cfg, log=log)
+
+
+def ensure_foreign_keys(spark, cfg, log=print):
+    """Declare the Gold star-schema relationships as informational FOREIGN KEY constraints.
+
+    BI tools that read Unity Catalog constraints (Publish to Power BI) build the
+    model relationships from these. Unity Catalog only, like primary keys.
+    """
+    if not cfg.catalog:
+        return 0
+    added = 0
+    for child, column, parent, parent_column in GOLD_FOREIGN_KEYS:
+        ensure_primary_key(spark, cfg, parent, log=log)
+        _layer, child_name, _s, _pk, _d = TABLES[child]
+        name = f"fk_{child_name}_{column}"
+        schema_part = cfg.schema_name("gold").split(".")[-1]
+        present = spark.sql(
+            f"SELECT 1 FROM {cfg.catalog}.information_schema.table_constraints "
+            f"WHERE table_schema = '{schema_part}' AND table_name = '{child_name}' "
+            f"AND constraint_name = '{name}'").count()
+        if present:
+            continue
+        try:
+            spark.sql(f"ALTER TABLE {cfg.table(child)} ADD CONSTRAINT {name} "
+                      f"FOREIGN KEY ({column}) REFERENCES {cfg.table(parent)} ({parent_column})")
+            added += 1
+            log(f"foreign key {name}: {child}.{column} -> {parent}.{parent_column}")
+        except Exception as exc:  # informational only; a missing constraint does not change the data
+            log(f"note: foreign key {name} skipped: {str(exc)[:160]}")
+    return added
 
 
 def ensure_primary_key(spark, cfg, logical, log=print):
