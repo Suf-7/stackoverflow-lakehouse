@@ -333,10 +333,7 @@ def run_silver_to_gold(spark, cfg, fail_on_error=True, optimize=True, echo=print
     questions, answers, tags = _alive(spark, cfg)
     base = _question_base(questions, answers)
     answer_rows = _answers_base(questions, answers)
-    # Cache the shared frames. Gold reads each several times (facts, then aggregates).
-    base.cache()
-    answer_rows.cache()
-    tags.cache()
+    # Do not cache these frames. Databricks serverless rejects cache() and unpersist().
 
     steps = [
         ("dim_date", "gold.dim_date", lambda rec: step_dim_date(spark, cfg, questions, answers, rec)),
@@ -354,15 +351,10 @@ def run_silver_to_gold(spark, cfg, fail_on_error=True, optimize=True, echo=print
     if optimize:
         steps.append(("optimize", "*", lambda rec: step_optimize(spark, cfg, rec)))
 
-    try:
-        for entity, target, fn in steps:
-            target_table = cfg.table(target) if target != "*" else "-"
-            with audit.step(LAYER, entity, "current Silver layer", target_table) as rec:
-                fn(rec)
-    finally:
-        base.unpersist()
-        answer_rows.unpersist()
-        tags.unpersist()
+    for entity, target, fn in steps:
+        target_table = cfg.table(target) if target != "*" else "-"
+        with audit.step(LAYER, entity, "current Silver layer", target_table) as rec:
+            fn(rec)
 
     echo(f"{LAYER} summary: {audit.summary()}")
     if fail_on_error and audit.failures:
