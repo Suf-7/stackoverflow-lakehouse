@@ -20,7 +20,7 @@ def create_table_sql(full_name, schema, primary_key, description, layer):
 
 def setup(spark, cfg, reset=False, log=print):
     """Idempotent: safe to run any number of times. reset=True drops all tables first."""
-    for layer in ("raw", "bronze", "silver", "ops"):
+    for layer in ("raw", "bronze", "silver", "gold", "ops"):
         spark.sql(f"CREATE SCHEMA IF NOT EXISTS {cfg.schema_name(layer)}")
     if cfg.catalog:   # Unity Catalog volume for raw files (Databricks only)
         spark.sql(f"CREATE VOLUME IF NOT EXISTS {cfg.schema_name('raw')}.{cfg.landing_volume}")

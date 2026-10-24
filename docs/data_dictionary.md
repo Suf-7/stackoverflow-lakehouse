@@ -298,6 +298,158 @@ Records that failed Silver data-quality rules. **Primary key:** `dq_id`
 | `payload` | `string` |  | yes | JSON of the record as it would have entered Silver |
 | `load_timestamp` | `timestamp` |  | yes | When the record was quarantined |
 
+### Gold layer (`so_gold`)
+
+#### `gold.dim_date`
+
+Calendar dimension, one row per day, including the ChatGPT launch marker. **Primary key:** `date_key`
+
+| Column | Type | Key | Nullable | Description |
+|---|---|---|---|---|
+| `date_key` | `int` | PK | no | Date key, YYYYMMDD |
+| `full_date` | `date` |  | yes | Calendar day |
+| `year` | `int` |  | yes | Year |
+| `quarter` | `int` |  | yes | Quarter, 1 to 4 |
+| `month` | `int` |  | yes | Month number, 1 to 12 |
+| `month_name` | `string` |  | yes | Month name |
+| `year_month` | `string` |  | yes | YYYY-MM, for monthly axes |
+| `week_of_year` | `int` |  | yes | ISO-style week number from Spark weekofyear |
+| `day_of_month` | `int` |  | yes | Day of the month |
+| `day_of_week` | `int` |  | yes | Spark dayofweek: 1 is Sunday, 7 is Saturday |
+| `day_name` | `string` |  | yes | Weekday name |
+| `is_after_chatgpt` | `boolean` |  | yes | True on and after 30 Nov 2022, the public ChatGPT launch |
+| `record_hash` | `string` |  | yes | SHA-256 of the business columns |
+| `load_timestamp` | `timestamp` |  | yes | When this row was last inserted or updated in Gold |
+
+#### `gold.dim_tag`
+
+Tag dimension with a technology category. **Primary key:** `tag`
+
+| Column | Type | Key | Nullable | Description |
+|---|---|---|---|---|
+| `tag` | `string` | PK | no | Tag name |
+| `category` | `string` |  | yes | Technology category used by the dashboard |
+| `is_tracked` | `boolean` |  | yes | Tag is one of the 18 tags this project collects |
+| `record_hash` | `string` |  | yes | SHA-256 of the business columns |
+| `load_timestamp` | `timestamp` |  | yes | When this row was last inserted or updated in Gold |
+
+#### `gold.dim_user`
+
+Pseudonymous user dimension with reputation band and cohort month. **Primary key:** `user_key`
+
+| Column | Type | Key | Nullable | Description |
+|---|---|---|---|---|
+| `user_key` | `string` | PK | no | Salted SHA-256 of the Stack Overflow user id |
+| `user_type` | `string` |  | yes | Latest account type |
+| `reputation` | `int` |  | yes | Latest known reputation |
+| `reputation_band` | `string` |  | yes | under 100, 100 to 999, 1,000 to 9,999, 10,000 or more, or unknown |
+| `accept_rate` | `int` |  | yes | Latest known accept rate |
+| `first_seen_at` | `timestamp` |  | yes | Earliest post time seen for this user |
+| `cohort_month` | `date` |  | yes | First day of the month of the users first non-deleted post |
+| `record_hash` | `string` |  | yes | SHA-256 of the business columns |
+| `load_timestamp` | `timestamp` |  | yes | When this row was last inserted or updated in Gold |
+
+#### `gold.fact_question`
+
+Current metrics for each non-deleted question. **Primary key:** `question_id`
+
+| Column | Type | Key | Nullable | Description |
+|---|---|---|---|---|
+| `question_id` | `bigint` | PK | no | Question id, degenerate dimension |
+| `created_date_key` | `int` |  | yes | FK to dim_date.date_key, the day the question was asked |
+| `owner_user_key` | `string` |  | yes | FK to dim_user.user_key, null when the owner has no user id |
+| `title` | `string` |  | yes | Decoded title, degenerate dimension for drill-through |
+| `score` | `int` |  | yes | Latest known score |
+| `view_count` | `int` |  | yes | Latest known lifetime views |
+| `answer_count` | `int` |  | yes | Latest known answer count from the API |
+| `has_any_answer` | `boolean` |  | yes | A non-deleted answer exists in Silver |
+| `has_accepted_answer` | `boolean` |  | yes | A non-deleted accepted answer exists |
+| `is_closed` | `boolean` |  | yes | Question is closed |
+| `closed_reason_code` | `string` |  | yes | Normalised close reason, degenerate dimension |
+| `hours_to_first_answer` | `double` |  | yes | Hours from question creation to the earliest surviving answer |
+| `hours_to_accepted_answer` | `double` |  | yes | Hours from question creation to the accepted answer |
+| `answered_within_24h` | `boolean` |  | yes | hours_to_first_answer is 24 or less |
+| `record_hash` | `string` |  | yes | SHA-256 of the business columns |
+| `load_timestamp` | `timestamp` |  | yes | When this row was last inserted or updated in Gold |
+
+#### `gold.fact_answer`
+
+One row per non-deleted answer on a non-deleted question. **Primary key:** `answer_id`
+
+| Column | Type | Key | Nullable | Description |
+|---|---|---|---|---|
+| `answer_id` | `bigint` | PK | no | Answer id |
+| `question_id` | `bigint` |  | yes | FK to fact_question.question_id |
+| `created_date_key` | `int` |  | yes | FK to dim_date.date_key, the day the answer was posted |
+| `owner_user_key` | `string` |  | yes | FK to dim_user.user_key |
+| `score` | `int` |  | yes | Latest known score |
+| `is_accepted` | `boolean` |  | yes | Accepted answer flag |
+| `is_first_answer` | `boolean` |  | yes | Earliest surviving answer on the question; ties go to the smaller answer id |
+| `hours_after_question` | `double` |  | yes | Hours between the question and this answer |
+| `record_hash` | `string` |  | yes | SHA-256 of the business columns |
+| `load_timestamp` | `timestamp` |  | yes | When this row was last inserted or updated in Gold |
+
+#### `gold.bridge_question_tag`
+
+Bridge between questions and tags. **Primary key:** `question_id, tag`
+
+| Column | Type | Key | Nullable | Description |
+|---|---|---|---|---|
+| `question_id` | `bigint` | PK | no | FK to fact_question.question_id |
+| `tag` | `string` | PK | no | FK to dim_tag.tag |
+| `is_tracked` | `boolean` |  | yes | Tag is one of the 18 collected tags |
+| `record_hash` | `string` |  | yes | SHA-256 of the business columns |
+| `load_timestamp` | `timestamp` |  | yes | When this row was last inserted or updated in Gold |
+
+#### `gold.agg_tag_month`
+
+Monthly metrics per tracked tag, for the dashboard. **Primary key:** `tag, month_start`
+
+| Column | Type | Key | Nullable | Description |
+|---|---|---|---|---|
+| `tag` | `string` | PK | no | FK to dim_tag.tag |
+| `month_start` | `date` | PK | no | First day of the month; matches dim_date.full_date |
+| `year_month` | `string` |  | yes | YYYY-MM label |
+| `category` | `string` |  | yes | Technology category, copied from dim_tag for the dashboard |
+| `questions` | `bigint` |  | yes | Non-deleted questions created this month with this tag |
+| `answers` | `bigint` |  | yes | Non-deleted answers on questions created this month with this tag |
+| `share_of_tracked_questions` | `double` |  | yes | This tags questions as a percent of distinct tracked questions that month |
+| `pct_unanswered` | `double` |  | yes | Percent of this tags questions with no surviving answer |
+| `median_hours_to_first_answer` | `double` |  | yes | Median hours to first answer, ignoring questions that were never answered |
+| `p90_hours_to_first_answer` | `double` |  | yes | 90th percentile hours to first answer, ignoring questions never answered |
+| `pct_closed` | `double` |  | yes | Percent of this tags questions that are closed |
+| `pct_answered_within_24h` | `double` |  | yes | Percent of this tags questions answered within 24 hours |
+| `record_hash` | `string` |  | yes | SHA-256 of the business columns |
+| `load_timestamp` | `timestamp` |  | yes | When this row was last inserted or updated in Gold |
+
+#### `gold.agg_tag_pairs`
+
+How often two tracked tags appear on the same question. **Primary key:** `tag_a, tag_b`
+
+| Column | Type | Key | Nullable | Description |
+|---|---|---|---|---|
+| `tag_a` | `string` | PK | no | First tracked tag, alphabetically |
+| `tag_b` | `string` | PK | no | Second tracked tag, alphabetically |
+| `category_a` | `string` |  | yes | Category of tag_a |
+| `category_b` | `string` |  | yes | Category of tag_b |
+| `question_count` | `bigint` |  | yes | Non-deleted questions that carry both tags |
+| `record_hash` | `string` |  | yes | SHA-256 of the business columns |
+| `load_timestamp` | `timestamp` |  | yes | When this row was last inserted or updated in Gold |
+
+#### `gold.agg_user_cohort`
+
+Share of each monthly cohort still posting. **Primary key:** `cohort_month, months_since`
+
+| Column | Type | Key | Nullable | Description |
+|---|---|---|---|---|
+| `cohort_month` | `date` | PK | no | First day of the month of the users first non-deleted post |
+| `months_since` | `int` | PK | no | Whole months after the cohort month, 0 is the cohort month itself |
+| `users_in_cohort` | `bigint` |  | yes | Users whose first non-deleted post was in the cohort month |
+| `users_active` | `bigint` |  | yes | Of those users, how many posted a question or answer in this offset month |
+| `share_still_active` | `double` |  | yes | users_active divided by users_in_cohort |
+| `record_hash` | `string` |  | yes | SHA-256 of the business columns |
+| `load_timestamp` | `timestamp` |  | yes | When this row was last inserted or updated in Gold |
+
 ### Operational tables (`so_ops`)
 
 #### `ops.pipeline_execution_logs`

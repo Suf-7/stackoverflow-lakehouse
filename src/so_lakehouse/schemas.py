@@ -321,7 +321,126 @@ DRIFT_EVENTS = StructType([
 ])
 
 # =============================================================================
-# 5. Registry: logical name -> (layer, table, schema, primary key, description)
+# 5. GOLD: star schema for the dashboard. Not a copy of Silver.
+#    Facts hold metrics. Dimensions hold descriptive attributes.
+#    Deleted questions and their answers are excluded.
+# =============================================================================
+DIM_DATE = StructType([
+    col("date_key", IntegerType(), "Date key, YYYYMMDD", nullable=False),
+    col("full_date", DateType(), "Calendar day"),
+    col("year", IntegerType(), "Year"),
+    col("quarter", IntegerType(), "Quarter, 1 to 4"),
+    col("month", IntegerType(), "Month number, 1 to 12"),
+    col("month_name", StringType(), "Month name"),
+    col("year_month", StringType(), "YYYY-MM, for monthly axes"),
+    col("week_of_year", IntegerType(), "ISO-style week number from Spark weekofyear"),
+    col("day_of_month", IntegerType(), "Day of the month"),
+    col("day_of_week", IntegerType(), "Spark dayofweek: 1 is Sunday, 7 is Saturday"),
+    col("day_name", StringType(), "Weekday name"),
+    col("is_after_chatgpt", BooleanType(), "True on and after 30 Nov 2022, the public ChatGPT launch"),
+    col("record_hash", StringType(), "SHA-256 of the business columns"),
+    col("load_timestamp", TimestampType(), "When this row was last inserted or updated in Gold"),
+])
+
+DIM_TAG = StructType([
+    col("tag", StringType(), "Tag name", nullable=False),
+    col("category", StringType(), "Technology category used by the dashboard"),
+    col("is_tracked", BooleanType(), "Tag is one of the 18 tags this project collects"),
+    col("record_hash", StringType(), "SHA-256 of the business columns"),
+    col("load_timestamp", TimestampType(), "When this row was last inserted or updated in Gold"),
+])
+
+DIM_USER = StructType([
+    col("user_key", StringType(), "Salted SHA-256 of the Stack Overflow user id", nullable=False),
+    col("user_type", StringType(), "Latest account type"),
+    col("reputation", IntegerType(), "Latest known reputation"),
+    col("reputation_band", StringType(), "under 100, 100 to 999, 1,000 to 9,999, 10,000 or more, or unknown"),
+    col("accept_rate", IntegerType(), "Latest known accept rate"),
+    col("first_seen_at", TimestampType(), "Earliest post time seen for this user"),
+    col("cohort_month", DateType(), "First day of the month of the users first non-deleted post"),
+    col("record_hash", StringType(), "SHA-256 of the business columns"),
+    col("load_timestamp", TimestampType(), "When this row was last inserted or updated in Gold"),
+])
+
+FACT_QUESTION = StructType([
+    col("question_id", LongType(), "Question id, degenerate dimension", nullable=False),
+    col("created_date_key", IntegerType(), "FK to dim_date.date_key, the day the question was asked"),
+    col("owner_user_key", StringType(), "FK to dim_user.user_key, null when the owner has no user id"),
+    col("title", StringType(), "Decoded title, degenerate dimension for drill-through"),
+    col("score", IntegerType(), "Latest known score"),
+    col("view_count", IntegerType(), "Latest known lifetime views"),
+    col("answer_count", IntegerType(), "Latest known answer count from the API"),
+    col("has_any_answer", BooleanType(), "A non-deleted answer exists in Silver"),
+    col("has_accepted_answer", BooleanType(), "A non-deleted accepted answer exists"),
+    col("is_closed", BooleanType(), "Question is closed"),
+    col("closed_reason_code", StringType(), "Normalised close reason, degenerate dimension"),
+    col("hours_to_first_answer", DoubleType(), "Hours from question creation to the earliest surviving answer"),
+    col("hours_to_accepted_answer", DoubleType(), "Hours from question creation to the accepted answer"),
+    col("answered_within_24h", BooleanType(), "hours_to_first_answer is 24 or less"),
+    col("record_hash", StringType(), "SHA-256 of the business columns"),
+    col("load_timestamp", TimestampType(), "When this row was last inserted or updated in Gold"),
+])
+
+FACT_ANSWER = StructType([
+    col("answer_id", LongType(), "Answer id", nullable=False),
+    col("question_id", LongType(), "FK to fact_question.question_id"),
+    col("created_date_key", IntegerType(), "FK to dim_date.date_key, the day the answer was posted"),
+    col("owner_user_key", StringType(), "FK to dim_user.user_key"),
+    col("score", IntegerType(), "Latest known score"),
+    col("is_accepted", BooleanType(), "Accepted answer flag"),
+    col("is_first_answer", BooleanType(), "Earliest surviving answer on the question; ties go to the smaller answer id"),
+    col("hours_after_question", DoubleType(), "Hours between the question and this answer"),
+    col("record_hash", StringType(), "SHA-256 of the business columns"),
+    col("load_timestamp", TimestampType(), "When this row was last inserted or updated in Gold"),
+])
+
+BRIDGE_QUESTION_TAG = StructType([
+    col("question_id", LongType(), "FK to fact_question.question_id", nullable=False),
+    col("tag", StringType(), "FK to dim_tag.tag", nullable=False),
+    col("is_tracked", BooleanType(), "Tag is one of the 18 collected tags"),
+    col("record_hash", StringType(), "SHA-256 of the business columns"),
+    col("load_timestamp", TimestampType(), "When this row was last inserted or updated in Gold"),
+])
+
+AGG_TAG_MONTH = StructType([
+    col("tag", StringType(), "FK to dim_tag.tag", nullable=False),
+    col("month_start", DateType(), "First day of the month; matches dim_date.full_date", nullable=False),
+    col("year_month", StringType(), "YYYY-MM label"),
+    col("category", StringType(), "Technology category, copied from dim_tag for the dashboard"),
+    col("questions", LongType(), "Non-deleted questions created this month with this tag"),
+    col("answers", LongType(), "Non-deleted answers on questions created this month with this tag"),
+    col("share_of_tracked_questions", DoubleType(), "This tags questions as a percent of distinct tracked questions that month"),
+    col("pct_unanswered", DoubleType(), "Percent of this tags questions with no surviving answer"),
+    col("median_hours_to_first_answer", DoubleType(), "Median hours to first answer, ignoring questions that were never answered"),
+    col("p90_hours_to_first_answer", DoubleType(), "90th percentile hours to first answer, ignoring questions never answered"),
+    col("pct_closed", DoubleType(), "Percent of this tags questions that are closed"),
+    col("pct_answered_within_24h", DoubleType(), "Percent of this tags questions answered within 24 hours"),
+    col("record_hash", StringType(), "SHA-256 of the business columns"),
+    col("load_timestamp", TimestampType(), "When this row was last inserted or updated in Gold"),
+])
+
+AGG_TAG_PAIRS = StructType([
+    col("tag_a", StringType(), "First tracked tag, alphabetically", nullable=False),
+    col("tag_b", StringType(), "Second tracked tag, alphabetically", nullable=False),
+    col("category_a", StringType(), "Category of tag_a"),
+    col("category_b", StringType(), "Category of tag_b"),
+    col("question_count", LongType(), "Non-deleted questions that carry both tags"),
+    col("record_hash", StringType(), "SHA-256 of the business columns"),
+    col("load_timestamp", TimestampType(), "When this row was last inserted or updated in Gold"),
+])
+
+AGG_USER_COHORT = StructType([
+    col("cohort_month", DateType(), "First day of the month of the users first non-deleted post", nullable=False),
+    col("months_since", IntegerType(), "Whole months after the cohort month, 0 is the cohort month itself", nullable=False),
+    col("users_in_cohort", LongType(), "Users whose first non-deleted post was in the cohort month"),
+    col("users_active", LongType(), "Of those users, how many posted a question or answer in this offset month"),
+    col("share_still_active", DoubleType(), "users_active divided by users_in_cohort"),
+    col("record_hash", StringType(), "SHA-256 of the business columns"),
+    col("load_timestamp", TimestampType(), "When this row was last inserted or updated in Gold"),
+])
+
+# =============================================================================
+# 6. Registry: logical name -> (layer, table, schema, primary key, description)
 # =============================================================================
 TABLES = OrderedDict([
     ("bronze.questions", ("bronze", "questions", bronze_schema("questions"), ["question_id", "_batch_id"],
@@ -349,6 +468,24 @@ TABLES = OrderedDict([
                                  "Restricted: masked titles and bodies for text analysis")),
     ("silver.dq_quarantine", ("silver", "dq_quarantine", SILVER_DQ_QUARANTINE, ["dq_id"],
                               "Records that failed Silver data-quality rules")),
+    ("gold.dim_date", ("gold", "dim_date", DIM_DATE, ["date_key"],
+                       "Calendar dimension, one row per day, including the ChatGPT launch marker")),
+    ("gold.dim_tag", ("gold", "dim_tag", DIM_TAG, ["tag"],
+                      "Tag dimension with a technology category")),
+    ("gold.dim_user", ("gold", "dim_user", DIM_USER, ["user_key"],
+                       "Pseudonymous user dimension with reputation band and cohort month")),
+    ("gold.fact_question", ("gold", "fact_question", FACT_QUESTION, ["question_id"],
+                            "Current metrics for each non-deleted question")),
+    ("gold.fact_answer", ("gold", "fact_answer", FACT_ANSWER, ["answer_id"],
+                          "One row per non-deleted answer on a non-deleted question")),
+    ("gold.bridge_question_tag", ("gold", "bridge_question_tag", BRIDGE_QUESTION_TAG, ["question_id", "tag"],
+                                  "Bridge between questions and tags")),
+    ("gold.agg_tag_month", ("gold", "agg_tag_month", AGG_TAG_MONTH, ["tag", "month_start"],
+                            "Monthly metrics per tracked tag, for the dashboard")),
+    ("gold.agg_tag_pairs", ("gold", "agg_tag_pairs", AGG_TAG_PAIRS, ["tag_a", "tag_b"],
+                            "How often two tracked tags appear on the same question")),
+    ("gold.agg_user_cohort", ("gold", "agg_user_cohort", AGG_USER_COHORT, ["cohort_month", "months_since"],
+                              "Share of each monthly cohort still posting")),
     ("ops.pipeline_execution_logs", ("ops", "pipeline_execution_logs", EXECUTION_LOGS, ["log_id"],
                                      "One row per file or table processed by any run")),
     ("ops.batch_registry", ("ops", "batch_registry", BATCH_REGISTRY, ["batch_id"],

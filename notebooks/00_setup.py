@@ -1,7 +1,7 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # 00 · Setup
-# MAGIC Creates the Unity Catalog schemas (`so_raw`, `so_bronze`, `so_silver`, `so_ops`), the landing volume and
+# MAGIC Creates the Unity Catalog schemas (`so_raw`, `so_bronze`, `so_silver`, `so_gold`, `so_ops`), the landing volume and
 # MAGIC every Delta table with its explicit schema, comments and primary key. Safe to run repeatedly.
 # MAGIC
 # MAGIC | Widget | Meaning |
@@ -54,3 +54,4 @@ for lt in ("full", "incremental"):
 # COMMAND ----------
 
 display(spark.sql(f"SHOW TABLES IN {cfg.schema_name('silver')}"))
+display(spark.sql(f"SHOW TABLES IN {cfg.schema_name('gold')}"))

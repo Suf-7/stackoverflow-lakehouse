@@ -1,11 +1,12 @@
 # Stack Overflow Developer Q&A Lakehouse
 
-An end-to-end Medallion lakehouse on Databricks that tracks Stack Overflow questions and answers for 18 data-and-analytics technologies from 2018 onward. Phase 2 implements the **Bronze** and **Silver** layers in PySpark with explicit schemas, idempotent `MERGE INTO` upserts, parameterized backfills, schema-drift handling and audit logging.
+An end-to-end Medallion lakehouse on Databricks that tracks Stack Overflow questions and answers for 18 data-and-analytics technologies from 2018 onward. Phase 2 implements the **Bronze** and **Silver** layers. Phase 3 adds a **Gold** star schema and dashboard aggregates, refreshed with the same idempotent `MERGE INTO` and audit log.
 
 | Phase | Deliverable |
 |---|---|
 | 1 | [Proposal](docs/phase1_proposal.md) ([PDF](docs/phase1_proposal.pdf)) |
 | 2 | This README, the [`src/so_lakehouse`](src/so_lakehouse) package, the [notebooks](notebooks), the [data dictionary](docs/data_dictionary.md), the [Databricks run evidence](evidence/README.md) and the [Phase 2 learning guide](docs/phase2_guide.md) ([PDF](docs/phase2_guide.pdf)) |
+| 3 | Gold star schema ([model](docs/gold_model.md)), `notebooks/05_silver_to_gold`, aggregates for the three business questions |
 
 **Team:** Muhammad Sufyan (24L-2601), Muaaz Fahad (24L-2563). **Source:** [Stack Exchange API v2.3](https://api.stackexchange.com/docs), content licensed CC BY-SA 4.0.
 
@@ -19,8 +20,10 @@ flowchart LR
     L -->|01_raw_to_bronze<br/>explicit StructType, replaceWhere| B[(Bronze<br/>so_bronze)]
     L -.->|bad records| Q[(quarantine_records)]
     B -->|02_bronze_to_silver<br/>cast, PII, DQ, MERGE INTO| S[(Silver<br/>so_silver)]
+    S -->|05_silver_to_gold<br/>star schema, MERGE INTO| G[(Gold<br/>so_gold)]
     B -.-> O[(so_ops<br/>execution logs<br/>batch registry<br/>drift events)]
     S -.-> O
+    G -.-> O
 ```
 
 | Layer | Unity Catalog schema | What it holds |
@@ -28,6 +31,7 @@ flowchart LR
 | Landing | `so_raw.landing` (volume) | One folder per batch: `full/<batch_id>/` or `incremental/<batch_id>/` |
 | Bronze | `so_bronze` | Raw records typed by the contract, one row per record per batch, plus ingestion metadata |
 | Silver | `so_silver` | One current, cleansed, PII-safe row per entity, kept up to date with `MERGE INTO` |
+| Gold | `so_gold` | Star schema (facts, dimensions, bridge) plus monthly and cohort aggregates. Deleted questions are excluded |
 | Ops | `so_ops` | `pipeline_execution_logs`, `batch_registry`, `schema_drift_events` |
 
 ## Repository layout
@@ -37,12 +41,14 @@ flowchart LR
 | `src/so_lakehouse/schemas.py` | Every schema as `StructType`/`StructField` with comments and primary keys |
 | `src/so_lakehouse/bronze.py` | Raw-to-Bronze: strict parse, quarantine, drift handling, `replaceWhere` writes |
 | `src/so_lakehouse/silver.py` | Bronze-to-Silver: casting, de-duplication, PII, data quality, `MERGE INTO` |
+| `src/so_lakehouse/gold.py` | Silver-to-Gold: star schema, aggregates, `MERGE INTO`, `OPTIMIZE` |
 | `src/so_lakehouse/audit.py` | Audit logger writing one log row per file or table processed |
 | `src/so_lakehouse/batches.py` | Batch discovery and selection by id, date range or folder |
 | `src/so_lakehouse/drift.py` | Contract checker that detects new columns, type changes and malformed JSON |
 | `src/so_lakehouse/ddl.py` | Creates schemas, the volume and all tables |
-| `notebooks/` | Databricks notebooks `00`–`04` and `99` (thin wrappers with widgets) |
-| `jobs/so_lakehouse_pipeline.job.json` | Two-task Databricks job with parameters |
+| `notebooks/` | Databricks notebooks `00`–`05` and `99` (thin wrappers with widgets) |
+| `jobs/so_lakehouse_pipeline.job.json` | Three-task Databricks job: Bronze, Silver, then Gold |
+| `docs/gold_model.md` | Gold star schema, keys, and metric definitions |
 | `ingestion/` | API extraction scripts that write landing batches |
 | `data/demo_landing/` | Five real batches (2 full, 3 incremental) used for the demo and tests |
 | `tests/test_pipeline.py` | End-to-end tests of every Phase 2 requirement on local Spark + Delta |
@@ -62,7 +68,7 @@ flowchart LR
    ```
    Keep the salt forever: changing it changes every user key. For a quick classroom demo you can instead type a value into the `pii_salt` widget of notebook 02.
 4. **Run `notebooks/00_setup`.** It creates the schemas, the landing volume and every table, and copies `data/demo_landing` into `/Volumes/workspace/so_raw/landing`.
-5. **Run `01_raw_to_bronze`, then `02_bronze_to_silver`,** with default widgets. Open `03_audit_and_validation` to see the logs, registry, drift events and duplicate checks.
+5. **Run `01_raw_to_bronze`, then `02_bronze_to_silver`, then `05_silver_to_gold`,** with default widgets. Open `03_audit_and_validation` to see the logs, registry, drift events and duplicate checks. Gold writes its own rows to the same log table.
 6. **Optional:** import `jobs/so_lakehouse_pipeline.job.json` as a job after replacing `<your-email>` in the notebook paths. It runs both layers in order with shared parameters.
 
 ### Getting new data into the volume
@@ -97,9 +103,11 @@ Leave every widget empty except `mode = incremental`.
 
 - **Raw-to-Bronze** loads every landing batch that `so_ops.batch_registry` does not show as loaded. Batches already loaded are logged as `SKIPPED`.
 - **Bronze-to-Silver** processes every batch whose Bronze load is newer than its last Silver run.
+- **Silver-to-Gold** (`notebooks/05_silver_to_gold`) always refreshes the star schema from the current Silver tables. It has no batch id: Gold holds the current version of each question, and `MERGE` applies only the difference. Run it at the end of every incremental load. The job does this as the third task.
 
 ```bash
 python -m so_lakehouse.cli all --mode incremental
+python -m so_lakehouse.cli silver-to-gold
 ```
 
 ### Backfill (any historical timeframe)
@@ -137,6 +145,26 @@ In the Databricks job, the same choices are made by overriding job parameters wi
 | Audit logging | `so_ops.pipeline_execution_logs`: layer, parameter, start and end times, status, rows read, inserted, updated, deleted and quarantined |
 
 **Proof that it works:** the [`evidence/`](evidence/README.md) folder holds the notebooks of a full run on Databricks Free Edition, saved with their outputs as Jupyter notebooks that GitHub displays directly. They show the explicit schemas, the table descriptions, the MERGE statement, a re-run that changes nothing, a backfill, the schema-drift handling and the log table. The [Phase 2 learning guide](docs/phase2_guide.md) explains each mechanism.
+
+---
+
+## Gold layer
+
+Gold is a star schema, not a copy of Silver. Deleted questions are left out. Relationships, grains and metric definitions are in [docs/gold_model.md](docs/gold_model.md).
+
+| Table | Role | Grain |
+|---|---|---|
+| `gold.fact_question` | Fact | One current row per non-deleted question |
+| `gold.fact_answer` | Fact | One row per non-deleted answer |
+| `gold.bridge_question_tag` | Bridge | Question and tag |
+| `gold.dim_date` | Dimension | Day, with an after-ChatGPT flag (30 Nov 2022) |
+| `gold.dim_tag` | Dimension | Tag and technology category |
+| `gold.dim_user` | Dimension | Pseudonymous user, reputation band, cohort month |
+| `gold.agg_tag_month` | Aggregate | Tracked tag and month: volume, share, unanswered, median and 90th-percentile hours to first answer |
+| `gold.agg_tag_pairs` | Aggregate | Pair of tracked tags |
+| `gold.agg_user_cohort` | Aggregate | Cohort month and months since the first post |
+
+`05_silver_to_gold` MERGEs each table and writes one `Silver-to-Gold` row per table to `so_ops.pipeline_execution_logs`, including rows read, inserted, updated, deleted and the execution time. It then runs `OPTIMIZE` (liquid clustering on Databricks, `ZORDER` locally) on the fact tables and `agg_tag_month`.
 
 ---
 
@@ -438,6 +466,158 @@ Records that failed Silver data-quality rules. **Primary key:** `dq_id`
 | `source_batch_id` | `string` |  | yes | Batch of the failing record |
 | `payload` | `string` |  | yes | JSON of the record as it would have entered Silver |
 | `load_timestamp` | `timestamp` |  | yes | When the record was quarantined |
+
+### Gold layer (`so_gold`)
+
+#### `gold.dim_date`
+
+Calendar dimension, one row per day, including the ChatGPT launch marker. **Primary key:** `date_key`
+
+| Column | Type | Key | Nullable | Description |
+|---|---|---|---|---|
+| `date_key` | `int` | PK | no | Date key, YYYYMMDD |
+| `full_date` | `date` |  | yes | Calendar day |
+| `year` | `int` |  | yes | Year |
+| `quarter` | `int` |  | yes | Quarter, 1 to 4 |
+| `month` | `int` |  | yes | Month number, 1 to 12 |
+| `month_name` | `string` |  | yes | Month name |
+| `year_month` | `string` |  | yes | YYYY-MM, for monthly axes |
+| `week_of_year` | `int` |  | yes | ISO-style week number from Spark weekofyear |
+| `day_of_month` | `int` |  | yes | Day of the month |
+| `day_of_week` | `int` |  | yes | Spark dayofweek: 1 is Sunday, 7 is Saturday |
+| `day_name` | `string` |  | yes | Weekday name |
+| `is_after_chatgpt` | `boolean` |  | yes | True on and after 30 Nov 2022, the public ChatGPT launch |
+| `record_hash` | `string` |  | yes | SHA-256 of the business columns |
+| `load_timestamp` | `timestamp` |  | yes | When this row was last inserted or updated in Gold |
+
+#### `gold.dim_tag`
+
+Tag dimension with a technology category. **Primary key:** `tag`
+
+| Column | Type | Key | Nullable | Description |
+|---|---|---|---|---|
+| `tag` | `string` | PK | no | Tag name |
+| `category` | `string` |  | yes | Technology category used by the dashboard |
+| `is_tracked` | `boolean` |  | yes | Tag is one of the 18 tags this project collects |
+| `record_hash` | `string` |  | yes | SHA-256 of the business columns |
+| `load_timestamp` | `timestamp` |  | yes | When this row was last inserted or updated in Gold |
+
+#### `gold.dim_user`
+
+Pseudonymous user dimension with reputation band and cohort month. **Primary key:** `user_key`
+
+| Column | Type | Key | Nullable | Description |
+|---|---|---|---|---|
+| `user_key` | `string` | PK | no | Salted SHA-256 of the Stack Overflow user id |
+| `user_type` | `string` |  | yes | Latest account type |
+| `reputation` | `int` |  | yes | Latest known reputation |
+| `reputation_band` | `string` |  | yes | under 100, 100 to 999, 1,000 to 9,999, 10,000 or more, or unknown |
+| `accept_rate` | `int` |  | yes | Latest known accept rate |
+| `first_seen_at` | `timestamp` |  | yes | Earliest post time seen for this user |
+| `cohort_month` | `date` |  | yes | First day of the month of the users first non-deleted post |
+| `record_hash` | `string` |  | yes | SHA-256 of the business columns |
+| `load_timestamp` | `timestamp` |  | yes | When this row was last inserted or updated in Gold |
+
+#### `gold.fact_question`
+
+Current metrics for each non-deleted question. **Primary key:** `question_id`
+
+| Column | Type | Key | Nullable | Description |
+|---|---|---|---|---|
+| `question_id` | `bigint` | PK | no | Question id, degenerate dimension |
+| `created_date_key` | `int` |  | yes | FK to dim_date.date_key, the day the question was asked |
+| `owner_user_key` | `string` |  | yes | FK to dim_user.user_key, null when the owner has no user id |
+| `title` | `string` |  | yes | Decoded title, degenerate dimension for drill-through |
+| `score` | `int` |  | yes | Latest known score |
+| `view_count` | `int` |  | yes | Latest known lifetime views |
+| `answer_count` | `int` |  | yes | Latest known answer count from the API |
+| `has_any_answer` | `boolean` |  | yes | A non-deleted answer exists in Silver |
+| `has_accepted_answer` | `boolean` |  | yes | A non-deleted accepted answer exists |
+| `is_closed` | `boolean` |  | yes | Question is closed |
+| `closed_reason_code` | `string` |  | yes | Normalised close reason, degenerate dimension |
+| `hours_to_first_answer` | `double` |  | yes | Hours from question creation to the earliest surviving answer |
+| `hours_to_accepted_answer` | `double` |  | yes | Hours from question creation to the accepted answer |
+| `answered_within_24h` | `boolean` |  | yes | hours_to_first_answer is 24 or less |
+| `record_hash` | `string` |  | yes | SHA-256 of the business columns |
+| `load_timestamp` | `timestamp` |  | yes | When this row was last inserted or updated in Gold |
+
+#### `gold.fact_answer`
+
+One row per non-deleted answer on a non-deleted question. **Primary key:** `answer_id`
+
+| Column | Type | Key | Nullable | Description |
+|---|---|---|---|---|
+| `answer_id` | `bigint` | PK | no | Answer id |
+| `question_id` | `bigint` |  | yes | FK to fact_question.question_id |
+| `created_date_key` | `int` |  | yes | FK to dim_date.date_key, the day the answer was posted |
+| `owner_user_key` | `string` |  | yes | FK to dim_user.user_key |
+| `score` | `int` |  | yes | Latest known score |
+| `is_accepted` | `boolean` |  | yes | Accepted answer flag |
+| `is_first_answer` | `boolean` |  | yes | Earliest surviving answer on the question; ties go to the smaller answer id |
+| `hours_after_question` | `double` |  | yes | Hours between the question and this answer |
+| `record_hash` | `string` |  | yes | SHA-256 of the business columns |
+| `load_timestamp` | `timestamp` |  | yes | When this row was last inserted or updated in Gold |
+
+#### `gold.bridge_question_tag`
+
+Bridge between questions and tags. **Primary key:** `question_id, tag`
+
+| Column | Type | Key | Nullable | Description |
+|---|---|---|---|---|
+| `question_id` | `bigint` | PK | no | FK to fact_question.question_id |
+| `tag` | `string` | PK | no | FK to dim_tag.tag |
+| `is_tracked` | `boolean` |  | yes | Tag is one of the 18 collected tags |
+| `record_hash` | `string` |  | yes | SHA-256 of the business columns |
+| `load_timestamp` | `timestamp` |  | yes | When this row was last inserted or updated in Gold |
+
+#### `gold.agg_tag_month`
+
+Monthly metrics per tracked tag, for the dashboard. **Primary key:** `tag, month_start`
+
+| Column | Type | Key | Nullable | Description |
+|---|---|---|---|---|
+| `tag` | `string` | PK | no | FK to dim_tag.tag |
+| `month_start` | `date` | PK | no | First day of the month; matches dim_date.full_date |
+| `year_month` | `string` |  | yes | YYYY-MM label |
+| `category` | `string` |  | yes | Technology category, copied from dim_tag for the dashboard |
+| `questions` | `bigint` |  | yes | Non-deleted questions created this month with this tag |
+| `answers` | `bigint` |  | yes | Non-deleted answers on questions created this month with this tag |
+| `share_of_tracked_questions` | `double` |  | yes | This tags questions as a percent of distinct tracked questions that month |
+| `pct_unanswered` | `double` |  | yes | Percent of this tags questions with no surviving answer |
+| `median_hours_to_first_answer` | `double` |  | yes | Median hours to first answer, ignoring questions that were never answered |
+| `p90_hours_to_first_answer` | `double` |  | yes | 90th percentile hours to first answer, ignoring questions never answered |
+| `pct_closed` | `double` |  | yes | Percent of this tags questions that are closed |
+| `pct_answered_within_24h` | `double` |  | yes | Percent of this tags questions answered within 24 hours |
+| `record_hash` | `string` |  | yes | SHA-256 of the business columns |
+| `load_timestamp` | `timestamp` |  | yes | When this row was last inserted or updated in Gold |
+
+#### `gold.agg_tag_pairs`
+
+How often two tracked tags appear on the same question. **Primary key:** `tag_a, tag_b`
+
+| Column | Type | Key | Nullable | Description |
+|---|---|---|---|---|
+| `tag_a` | `string` | PK | no | First tracked tag, alphabetically |
+| `tag_b` | `string` | PK | no | Second tracked tag, alphabetically |
+| `category_a` | `string` |  | yes | Category of tag_a |
+| `category_b` | `string` |  | yes | Category of tag_b |
+| `question_count` | `bigint` |  | yes | Non-deleted questions that carry both tags |
+| `record_hash` | `string` |  | yes | SHA-256 of the business columns |
+| `load_timestamp` | `timestamp` |  | yes | When this row was last inserted or updated in Gold |
+
+#### `gold.agg_user_cohort`
+
+Share of each monthly cohort still posting. **Primary key:** `cohort_month, months_since`
+
+| Column | Type | Key | Nullable | Description |
+|---|---|---|---|---|
+| `cohort_month` | `date` | PK | no | First day of the month of the users first non-deleted post |
+| `months_since` | `int` | PK | no | Whole months after the cohort month, 0 is the cohort month itself |
+| `users_in_cohort` | `bigint` |  | yes | Users whose first non-deleted post was in the cohort month |
+| `users_active` | `bigint` |  | yes | Of those users, how many posted a question or answer in this offset month |
+| `share_still_active` | `double` |  | yes | users_active divided by users_in_cohort |
+| `record_hash` | `string` |  | yes | SHA-256 of the business columns |
+| `load_timestamp` | `timestamp` |  | yes | When this row was last inserted or updated in Gold |
 
 ### Operational tables (`so_ops`)
 

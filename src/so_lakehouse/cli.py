@@ -12,8 +12,9 @@ Examples
   python -m so_lakehouse.cli raw-to-bronze   --mode backfill --start-date 2026-09-25 --end-date 2026-09-30
   python -m so_lakehouse.cli bronze-to-silver --mode backfill --batch-ids full_2025-01-01_2025-04-01
 
-  # both layers in one go
+  # both layers, then refresh Gold from the current Silver state
   python -m so_lakehouse.cli all --mode incremental
+  python -m so_lakehouse.cli silver-to-gold
 """
 import argparse
 import sys
@@ -21,12 +22,13 @@ import sys
 from .bronze import run_raw_to_bronze
 from .config import PipelineConfig
 from .ddl import setup
+from .gold import run_silver_to_gold
 from .silver import run_bronze_to_silver
 
 
 def build_parser():
     p = argparse.ArgumentParser(prog="so_lakehouse")
-    p.add_argument("command", choices=["setup", "raw-to-bronze", "bronze-to-silver", "all"])
+    p.add_argument("command", choices=["setup", "raw-to-bronze", "bronze-to-silver", "silver-to-gold", "all"])
     p.add_argument("--target", choices=["local", "databricks"], default="local")
     p.add_argument("--catalog", help="Unity Catalog name (databricks target)")
     p.add_argument("--landing-root", default="data/demo_landing", help="folder with full/ and incremental/")
@@ -64,6 +66,8 @@ def main(argv=None):
         silver_ids = args.batch_ids
         run_bronze_to_silver(spark, cfg, mode=args.mode, batch_ids=silver_ids, start_date=args.start_date,
                              end_date=args.end_date, fail_on_error=fail)
+    if args.command in ("silver-to-gold", "all"):
+        run_silver_to_gold(spark, cfg, fail_on_error=fail)
     return 0
 
 

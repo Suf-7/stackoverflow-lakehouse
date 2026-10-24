@@ -15,7 +15,7 @@ from so_lakehouse.schemas import TABLES  # noqa: E402
 
 START, END = "<!-- DATA-DICTIONARY:START -->", "<!-- DATA-DICTIONARY:END -->"
 LAYER_TITLES = {"bronze": "Bronze layer (`so_bronze`)", "silver": "Silver layer (`so_silver`)",
-                "ops": "Operational tables (`so_ops`)"}
+                "gold": "Gold layer (`so_gold`)", "ops": "Operational tables (`so_ops`)"}
 
 
 from pyspark.sql.types import StructType  # noqa: E402
@@ -39,7 +39,7 @@ def rows_for(field, pk, prefix=""):
 
 def render():
     out = []
-    for layer in ("bronze", "silver", "ops"):
+    for layer in ("bronze", "silver", "gold", "ops"):
         out.append(f"### {LAYER_TITLES[layer]}\n")
         for logical, (lyr, name, schema, pk, description) in TABLES.items():
             if lyr != layer:

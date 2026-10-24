@@ -29,6 +29,7 @@ class PipelineConfig:
     pii_salt: Optional[str] = None      # resolved lazily: only Silver needs it
     bronze_schema: str = "so_bronze"
     silver_schema: str = "so_silver"
+    gold_schema: str = "so_gold"
     ops_schema: str = "so_ops"
     raw_schema: str = "so_raw"
     landing_volume: str = "landing"
@@ -37,7 +38,7 @@ class PipelineConfig:
 
     # ---------------------------------------------------------------- naming
     def schema_name(self, layer):
-        schema = {"bronze": self.bronze_schema, "silver": self.silver_schema,
+        schema = {"bronze": self.bronze_schema, "silver": self.silver_schema, "gold": self.gold_schema,
                   "ops": self.ops_schema, "raw": self.raw_schema}[layer]
         return f"{self.catalog}.{schema}" if self.catalog else schema
 
@@ -60,7 +61,7 @@ class PipelineConfig:
         return cls(catalog=catalog, landing_root=landing_root,
                    pii_salt=pii_salt or None,
                    bronze_schema=lh["bronze_schema"], silver_schema=lh["silver_schema"],
-                   ops_schema=lh["ops_schema"], raw_schema=lh["raw_schema"],
+                   gold_schema=lh["gold_schema"], ops_schema=lh["ops_schema"], raw_schema=lh["raw_schema"],
                    landing_volume=lh["landing_volume"], drift_mode=drift_mode or lh["drift_mode"],
                    tracked_tags=_file_config()["tags"])
 
@@ -71,6 +72,7 @@ class PipelineConfig:
                    pii_salt=pii_salt or os.environ.get("SO_PII_SALT", "local-dev-salt-not-secret"),
                    bronze_schema=schema_prefix + lh["bronze_schema"],
                    silver_schema=schema_prefix + lh["silver_schema"],
+                   gold_schema=schema_prefix + lh["gold_schema"],
                    ops_schema=schema_prefix + lh["ops_schema"], raw_schema=schema_prefix + lh["raw_schema"],
                    drift_mode=drift_mode or lh["drift_mode"], tracked_tags=_file_config()["tags"])
 

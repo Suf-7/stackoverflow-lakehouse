@@ -31,6 +31,7 @@
     "landing_volume": "landing",
     "bronze_schema": "so_bronze",
     "silver_schema": "so_silver",
+    "gold_schema": "so_gold",
     "ops_schema": "so_ops",
     "drift_mode": "evolve",
     "pii_salt_secret_scope": "so_lakehouse",
