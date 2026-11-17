@@ -1,0 +1,45 @@
+{
+  "run_id": 1005795510073716,
+  "run_name": "so_lakehouse_pipeline",
+  "result": "SUCCESS",
+  "tasks": [
+    {
+      "task_key": "bronze_to_silver",
+      "notebook": "02_bronze_to_silver",
+      "parameters": {
+        "batch_ids": "{{job.parameters.batch_ids}}",
+        "catalog": "{{job.parameters.catalog}}",
+        "end_date": "{{job.parameters.end_date}}",
+        "mode": "{{job.parameters.mode}}",
+        "start_date": "{{job.parameters.start_date}}"
+      },
+      "result": "SUCCESS",
+      "started": "2026-11-17 20:32 UTC"
+    },
+    {
+      "task_key": "raw_to_bronze",
+      "notebook": "01_raw_to_bronze",
+      "parameters": {
+        "batch_ids": "{{job.parameters.batch_ids}}",
+        "catalog": "{{job.parameters.catalog}}",
+        "drift_mode": "{{job.parameters.drift_mode}}",
+        "end_date": "{{job.parameters.end_date}}",
+        "landing_path": "{{job.parameters.landing_path}}",
+        "load_type": "{{job.parameters.load_type}}",
+        "mode": "{{job.parameters.mode}}",
+        "start_date": "{{job.parameters.start_date}}"
+      },
+      "result": "SUCCESS",
+      "started": "2026-11-17 20:28 UTC"
+    },
+    {
+      "task_key": "silver_to_gold",
+      "notebook": "05_silver_to_gold",
+      "parameters": {
+        "catalog": "{{job.parameters.catalog}}"
+      },
+      "result": "SUCCESS",
+      "started": "2026-11-17 20:35 UTC"
+    }
+  ]
+}

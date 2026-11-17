@@ -15,8 +15,8 @@ from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import mm
-from reportlab.platypus import (BaseDocTemplate, Frame, KeepTogether, PageTemplate, Paragraph, Preformatted,
-                                Spacer, Table, TableStyle)
+from reportlab.platypus import (BaseDocTemplate, Frame, Image, KeepTogether, PageBreak, PageTemplate,
+                                Paragraph, Preformatted, Spacer, Table, TableStyle)
 from reportlab.platypus.flowables import HRFlowable
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -28,11 +28,12 @@ ACCENT, HEAD, RULE = colors.HexColor("#1c5cab"), colors.HexColor("#f0efec"), col
 CODE_BG = colors.HexColor("#f6f5f2")
 
 S = {
-    "h1": ParagraphStyle("h1", fontName="Helvetica-Bold", fontSize=18, leading=22, textColor=INK, spaceAfter=6),
+    "h1": ParagraphStyle("h1", fontName="Helvetica-Bold", fontSize=18, leading=22, textColor=INK, spaceAfter=6,
+                         keepWithNext=1),
     "h2": ParagraphStyle("h2", fontName="Helvetica-Bold", fontSize=13, leading=16, textColor=ACCENT,
-                         spaceBefore=12, spaceAfter=4),
+                         spaceBefore=12, spaceAfter=4, keepWithNext=1),
     "h3": ParagraphStyle("h3", fontName="Helvetica-Bold", fontSize=10.5, leading=13.5, textColor=INK,
-                         spaceBefore=8, spaceAfter=3),
+                         spaceBefore=8, spaceAfter=3, keepWithNext=1),
     "body": ParagraphStyle("body", fontName="Helvetica", fontSize=9.4, leading=13, textColor=INK, spaceAfter=5,
                            alignment=TA_LEFT),
     "bullet": ParagraphStyle("bullet", fontName="Helvetica", fontSize=9.4, leading=12.8, textColor=INK,
@@ -40,7 +41,22 @@ S = {
     "cell": ParagraphStyle("cell", fontName="Helvetica", fontSize=8, leading=10.2, textColor=INK),
     "cellb": ParagraphStyle("cellb", fontName="Helvetica-Bold", fontSize=8, leading=10.2, textColor=INK),
     "code": ParagraphStyle("code", fontName="Courier", fontSize=7.6, leading=9.6, textColor=INK),
+    "caption": ParagraphStyle("caption", fontName="Helvetica-Oblique", fontSize=8, leading=10.5, textColor=INK2,
+                              spaceBefore=2, spaceAfter=8),
 }
+
+
+def figure(path, caption, width, base_dir, max_height=170 * mm):
+    """An image scaled to the text width (and at most max_height), with its caption below."""
+    full = path if os.path.isabs(path) else os.path.join(base_dir, path)
+    img = Image(full)
+    scale = min(width / img.imageWidth, max_height / img.imageHeight)
+    img.drawWidth, img.drawHeight = img.imageWidth * scale, img.imageHeight * scale
+    img.hAlign = "LEFT"
+    parts = [img]
+    if caption:
+        parts.append(Paragraph(inline(caption), S["caption"]))
+    return KeepTogether(parts)
 
 
 def inline(text):
@@ -85,11 +101,14 @@ def code_block(lines, width):
     return t
 
 
-def parse(md, width):
+def parse(md, width, base_dir=ROOT):
     story, lines, i = [], md.splitlines(), 0
     while i < len(lines):
         line = lines[i]
-        if line.lstrip().startswith("```"):
+        image = re.match(r"^!\[([^\]]*)\]\(([^)]+)\)\s*$", line.strip())
+        if image:
+            story.append(figure(image.group(2), image.group(1), width, base_dir))
+        elif line.lstrip().startswith("```"):
             pad = len(line) - len(line.lstrip())
             block = []
             i += 1
@@ -97,6 +116,8 @@ def parse(md, width):
                 block.append(lines[i][pad:] if lines[i][:pad].strip() == "" else lines[i])
                 i += 1
             story += [code_block(block, width), Spacer(1, 5)]
+        elif line.strip() == "<!-- pagebreak -->":
+            story.append(PageBreak())
         elif line.startswith("<!--") or not line.strip():
             pass
         elif line.strip() == "---":
@@ -154,7 +175,7 @@ def main(src=SRC, out=OUT, label="Phase 2 Learning Guide"):
                   topPadding=0, bottomPadding=0)
     doc.addPageTemplates([PageTemplate(id="p", frames=[frame], onPage=footer(label))])
     with open(src) as f:
-        doc.build(parse(f.read(), doc.width))
+        doc.build(parse(f.read(), doc.width, os.path.dirname(os.path.abspath(src))))
     print("wrote", out)
 
 

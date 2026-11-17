@@ -6,7 +6,7 @@ An end-to-end Medallion lakehouse on Databricks that tracks Stack Overflow quest
 |---|---|
 | 1 | [Proposal](docs/phase1_proposal.md) ([PDF](docs/phase1_proposal.pdf)) |
 | 2 | This README, the [`src/so_lakehouse`](src/so_lakehouse) package, the [notebooks](notebooks), the [data dictionary](docs/data_dictionary.md), the [Databricks run evidence](evidence/README.md) and the [Phase 2 learning guide](docs/phase2_guide.md) ([PDF](docs/phase2_guide.pdf)) |
-| 3 | Gold star schema ([model](docs/gold_model.md)), `notebooks/05_silver_to_gold`, aggregates for the three business questions, and the [Power BI follow guide](docs/powerbi_guide.md) ([PDF](docs/powerbi_guide.pdf)) |
+| 3 | Gold star schema ([model](docs/gold_model.md)), `notebooks/05_silver_to_gold`, aggregates for the three business questions, the [Power BI follow guide](docs/powerbi_guide.md) ([PDF](docs/powerbi_guide.pdf)), the Power BI file [`stackoverflow_gold_complete.pbix`](stackoverflow_gold_complete.pbix), the [final report](docs/phase3_report.md) ([PDF](docs/phase3_report.pdf)) and the [three-task job run](evidence/phase3) |
 
 **Team:** Muhammad Sufyan (24L-2601), Muaaz Fahad (24L-2563). **Source:** [Stack Exchange API v2.3](https://api.stackexchange.com/docs), content licensed CC BY-SA 4.0.
 
@@ -50,6 +50,8 @@ flowchart LR
 | `jobs/so_lakehouse_pipeline.job.json` | Three-task Databricks job: Bronze, Silver, then Gold |
 | `docs/gold_model.md` | Gold star schema, keys, and metric definitions |
 | `docs/powerbi_guide.md` | Follow-along for the Power BI connection, model, and pages |
+| `docs/phase3_report.md` | Final report: architecture, decision log, Spark UI DAG, FinOps |
+| `scripts/draw_architecture.py`, `scripts/draw_gold_er.py` | Draw the report's architecture and Gold ER diagrams |
 | `ingestion/` | API extraction scripts that write landing batches |
 | `data/demo_landing/` | Five real batches (2 full, 3 incremental) used for the demo and tests |
 | `tests/test_pipeline.py` | End-to-end tests of every Phase 2 requirement on local Spark + Delta |

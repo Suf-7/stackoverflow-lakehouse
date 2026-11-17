@@ -1,5 +1,7 @@
 # Phase 2 evidence: a full run on Databricks
 
+Phase 3 evidence is in [`phase3/`](phase3): the three tasks of job run `1005795510073716` (Raw-to-Bronze, Bronze-to-Silver, Silver-to-Gold) on the real incremental batch `incr_20261117T202706Z`. The Silver-to-Gold notebook ends with the Gold rows of the log table. The [final report](../docs/phase3_report.md) section 4 summarises the run.
+
 These notebooks are the output of **one job run on Databricks Free Edition** (serverless compute, Unity Catalog, catalog `workspace`) on 11 October 2026. All 10 tasks finished with status SUCCESS. Each notebook is saved with its outputs exactly as the run produced them; GitHub displays the printed lines and tables directly.
 
 Job run `814281740296490`, run name `so_lakehouse_phase2_evidence`. Each notebook's first cell repeats the run id, task, parameters, start time and result. Email addresses were removed from the outputs.
