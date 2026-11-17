@@ -183,7 +183,7 @@ The model has the nine Gold tables and three audit tables (`pipeline_execution_l
 
 ![Figure 3. Activity page (Q1). Monthly tracked questions by technology category, January to June 2025. Languages lead throughout; every category falls after March.](report_assets/pbi_activity.png)
 
-![Figure 4. Response Time page (Q2). Over the January to June 2025 questions, the median wait for a first answer is 1.9 hours and 17.3% are never answered. The table lists the highest-scored tracked questions with their wait.](report_assets/pbi_response_time.png)
+![Figure 4. Response Time page (Q2). Over January to June 2025 the median wait is 1.9 hours and 17.3% of questions are never answered. TensorFlow, Airflow and dbt wait the longest; PyTorch, Power BI and scikit-learn have the largest unanswered share.](report_assets/pbi_response_time.png)
 
 ![Figure 5. Share page (Q3). Each tag's share of the distinct tracked questions in its month. sql stays near a third, pandas near a fifth and pyspark near a tenth; most other tags hold between 1% and 7%.](report_assets/pbi_share.png)
 
