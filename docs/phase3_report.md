@@ -183,11 +183,13 @@ The model has the nine Gold tables and three audit tables (`pipeline_execution_l
 
 ![Figure 3. Activity page (Q1). Monthly tracked questions by technology category, January to June 2025. Languages lead throughout; every category falls after March.](report_assets/pbi_activity.png)
 
-![Figure 4. Share page (Q3). Each tag's share of the distinct tracked questions in its month. sql stays near a third, pandas near a fifth and pyspark near a tenth; most other tags hold between 1% and 7%.](report_assets/pbi_share.png)
+![Figure 4. Response Time page (Q2). Over the January to June 2025 questions, the median wait for a first answer is 1.9 hours and 17.3% are never answered. The table lists the highest-scored tracked questions with their wait.](report_assets/pbi_response_time.png)
 
-![Figure 5. Pairs and Cohorts page. apache-spark with pyspark is by far the most common tracked pair. In the cohort matrix, 7.5% of users are active again one month after their first post and 1.4% after five months.](report_assets/pbi_pairs_cohorts.png)
+![Figure 5. Share page (Q3). Each tag's share of the distinct tracked questions in its month. sql stays near a third, pandas near a fifth and pyspark near a tenth; most other tags hold between 1% and 7%.](report_assets/pbi_share.png)
 
-![Figure 6. Audit page. Pipeline runs, rows quarantined, steps by layer and status, the execution log, schema-drift events by type and in detail, and the landing batch registry, all read from so_ops.](report_assets/pbi_audit.png)
+![Figure 6. Pairs and Cohorts page. apache-spark with pyspark is by far the most common tracked pair. In the cohort matrix, 7.5% of users are active again one month after their first post and 1.4% after five months.](report_assets/pbi_pairs_cohorts.png)
+
+![Figure 7. Audit page. Pipeline runs, rows quarantined, steps by layer and status, the execution log, schema-drift events by type and in detail, and the landing batch registry, all read from so_ops.](report_assets/pbi_audit.png)
 
 The loaded history is concentrated in January to June 2025, which is what the two full-load windows covered; 7,286 of the 7,619 questions loaded when the dashboard was built were created in 2025. The business pages are filtered to that window, so earlier years with only a few rows are not read as a trend. The multi-year decline in the Phase 1 proposal comes from API count queries; `dim_date.is_after_chatgpt` is ready to show it once a full-history load is run.
 
@@ -251,9 +253,9 @@ Cost: at the current size the Gold step costs about 3.5 minutes. Section 8.4 exp
 
 Databricks serverless compute does not expose the Spark UI; it shows a query profile instead. To show the classic Spark DAG, we ran the same package locally on Apache Spark 3.5.3 with Delta Lake 3.2.1. It read the five demo landing batches into Bronze, then Silver, then Gold. The local refresh produced the same Gold shape as Databricks (7,617 questions and 357 tag-months for those batches). We then ran the core of the most complex Gold step, `step_agg_tag_month`. It joins questions to their first-answer time and to their tracked tags, then groups by tag and month for a distinct question count, a median and a share. Adaptive query execution was turned off so the static plan is visible. Databricks runs with it on.
 
-![Figure 7. Spark UI, SQL / DataFrame tab, query 1215 (gold.agg_tag_month aggregation), read top to bottom; the left column continues in the right column. The full-height capture is docs/report_assets/spark_ui_dag_agg_tag_month_full.png.](report_assets/spark_ui_dag_agg_tag_month.png)
+![Figure 8. Spark UI, SQL / DataFrame tab, query 1215 (gold.agg_tag_month aggregation), read top to bottom; the left column continues in the right column. The full-height capture is docs/report_assets/spark_ui_dag_agg_tag_month_full.png.](report_assets/spark_ui_dag_agg_tag_month.png)
 
-![Figure 8. Close-up of figure 7: the partial HashAggregate of answers (8,478 rows), the shuffle Exchange (10) with 108.7 KiB written, the final HashAggregate of the first answer per question (6,333 rows), its BroadcastExchange, and the BroadcastHashJoin into the questions stream on the left.](report_assets/spark_ui_dag_shuffle_broadcast.png)
+![Figure 9. Close-up of figure 8: the partial HashAggregate of answers (8,478 rows), the shuffle Exchange (10) with 108.7 KiB written, the final HashAggregate of the first answer per question (6,333 rows), its BroadcastExchange, and the BroadcastHashJoin into the questions stream on the left.](report_assets/spark_ui_dag_shuffle_broadcast.png)
 
 ### 7.2 What Spark did
 
