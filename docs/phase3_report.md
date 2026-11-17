@@ -176,7 +176,7 @@ The model has the nine Gold tables and three audit tables (`pipeline_execution_l
 | Page | Business question | Visuals |
 |---|---|---|
 | Activity | Q1: how activity changed and which technologies lead | category slicer; line chart of questions by month and category |
-| Response Time | Q2: where developers wait longest, which tags are under-served | 3 KPI cards; top-10 bars for median hours and percent unanswered; question table |
+| Response Time | Q2: where developers wait longest, which tags are under-served | 3 KPI cards; bars of median hours and percent unanswered for the 18 tracked tags; question table |
 | Share | Q3: which technologies gain or lose attention | category slicer; line chart of share of tracked questions by tag |
 | Pairs and Cohorts | stretch goals from Phase 1 | top-10 tag pairs; cohort retention matrix |
 | Audit | pipeline health | pipeline runs and rows quarantined cards; steps by layer and status; log table; drift by type; drift detail; batch registry |
